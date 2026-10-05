@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Modul Basis Data — SMK PPLG Kelas XI</title>
+<link rel="stylesheet" href="assets/css/custom.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="assets/js/dark-mode.js"></script>
+<style>
+.index-page .main-content { margin-left: var(--sidebar-w); margin-top: var(--header-h); }
+.page-body { padding: 0; }
+.index-content { max-width: 1060px; margin: 0 auto; padding: 2rem; }
+.section-gap { margin-bottom: 2rem; }
+</style>
+</head>
+<body data-page="index">
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- HEADER -->
+<header class="header">
+  <button class="btn-icon hamburger-btn" id="hamburger-btn" title="Buka Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+  <a href="index.html" class="header-logo">
+    <div class="header-logo-icon">🗄️</div>
+    <div>
+      <span class="header-logo-text">E-Modul Basis Data</span>
+      <span class="header-logo-sub">SMK PPLG · Kelas XI · Kurikulum Merdeka</span>
+    </div>
+  </a>
+  <div class="header-spacer"></div>
+  <nav class="header-nav">
+    <a href="glossarium.html" class="btn-icon" title="Kamus Istilah">
+      <i class="fa-solid fa-book-open"></i>
+    </a>
+    <button class="btn-icon" id="dark-toggle" title="Mode Gelap">
+      <i class="fa-solid fa-moon"></i>
+    </button>
+    <a href="game/query-ninja.html" class="btn-game-nav">
+      <i class="fa-solid fa-gamepad"></i> Query Ninja
+    </a>
+  </nav>
+</header>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-inner">
+    <div class="sidebar-progress-wrap">
+      <div class="sidebar-progress-label">Progress Belajar</div>
+      <div class="sidebar-progress-text" id="sidebar-progress-text">0 dari 7 Bab Selesai</div>
+      <div class="sidebar-progress-bar">
+        <div class="sidebar-progress-fill" id="sidebar-progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">Materi Pembelajaran</div>
+
+    <a href="modules/bab-1-pengenalan-database.html" class="sidebar-nav-item" id="sidebar-bab-1" data-page="bab-1">
+      <div class="sidebar-bab-num">1</div>
+      <div class="sidebar-bab-info">
+        <span class="sidebar-bab-title">Pengenalan Database</span>
+        <span class="sidebar-bab-status">Belum dibuka</span>
+      </div>
+    </a>
+    <a href="modules/bab-2-erd-perancangan.html" class="sidebar-nav-item" id="sidebar-bab-2" data-page="bab-2">
+      <div class="sidebar-bab-num">2</div>
+      <div class="sidebar-bab-info">
+        <span class="sidebar-bab-title">ERD & Perancangan</span>
+        <span class="sidebar-bab-status">Belum dibuka</span>
+      </div>
+    </a>
+    <a href="modules/bab-3-ddl.html" class="sidebar-nav-item" id="sidebar-bab-3" data-page="bab-3">
+      <div class="sidebar-bab-num">3</div>
+      <div class="sidebar-bab-info">
+        <span class="sidebar-bab-title">DDL — Struktur DB</span>
+        <span class="sidebar-bab-status">Belum dibuka</span>
+      </div>
+    </a>
+    <a href="modules/bab-4-dml.html" class="sidebar-nav-item" id="sidebar-bab-4" data-page="bab-4">
+      <div class="sidebar-bab-num">4</div>
+      <div class="sidebar-bab-info">
+        <span class="sidebar-bab-title">DML — Manipulasi Data</span>
+        <span class="sidebar-bab-status">Belum dibuka</span>
+      </div>
+    </a>
+    <a href="modules/bab-5-normalisasi.html" class="sidebar-nav-item" id="sidebar-bab-5" data-page="bab-5">
+      <div class="sidebar-bab-num">5</div>
+      <div class="sidebar-bab-info">
+        <span class="sidebar-bab-title">Normalisasi</span>
+        <span class="sidebar-bab-status">Belum dibuka</span>
+      </div>
+    </a>
+    <a href="modules/bab-6-join-subquery.html" class="sidebar-nav-item" id="sidebar-bab-6" data-page="bab-6">
+      <div class="sidebar-bab-num">6</div>
+      <div class="sidebar-bab-info">
+        <span class="sidebar-bab-title">JOIN & Subquery</span>
+        <span class="sidebar-bab-status">Belum dibuka</span>
+      </div>
+    </a>
+    <a href="modules/bab-7-objek-lanjutan.html" class="sidebar-nav-item" id="sidebar-bab-7" data-page="bab-7">
+      <div class="sidebar-bab-num">7</div>
+      <div class="sidebar-bab-info">
+        <span class="sidebar-bab-title">Objek Lanjutan</span>
+        <span class="sidebar-bab-status">Belum dibuka</span>
+      </div>
+    </a>
+
+    <div class="sidebar-section-label" style="margin-top:.5rem">Fitur Lain</div>
+    <a href="game/query-ninja.html" class="sidebar-game-link">
+      <span style="font-size:1.1rem">🥷</span>
+      <div>
+        <div style="font-size:.82rem;font-weight:700">Query Ninja</div>
+        <div style="font-size:.68rem;color:#6d28d9">Game Edukasi SQL</div>
+      </div>
+    </a>
+    <a href="glossarium.html" class="sidebar-nav-item" style="margin-top:.5rem" data-page="glossarium">
+      <div class="sidebar-bab-num" style="font-size:.8rem">📖</div>
+      <div class="sidebar-bab-info">
+        <span class="sidebar-bab-title">Glossarium</span>
+        <span class="sidebar-bab-status">60+ istilah database</span>
+      </div>
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main-content index-page">
+
+  <!-- HERO -->
+  <div class="hero-section">
+    <div class="index-content" style="padding-top:2.5rem;padding-bottom:2.5rem">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <i class="fa-solid fa-graduation-cap"></i>
+          SMK PPLG · Kurikulum Merdeka · Fase F
+        </div>
+        <h1 class="hero-title">E-Modul <span>Basis Data</span><br>Interaktif</h1>
+        <p class="hero-subtitle">Pelajari database dari nol hingga mahir — dari konsep ERD sampai Stored Procedure — dengan materi, video, quiz, dan game edukatif terintegrasi.</p>
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-num">7</div>
+            <div class="hero-stat-label">Bab Materi</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">35+</div>
+            <div class="hero-stat-label">Soal Quiz</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">60+</div>
+            <div class="hero-stat-label">Kamus Istilah</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">1</div>
+            <div class="hero-stat-label">Game Edukasi</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE CONTENT -->
+  <div class="index-content">
+
+    <!-- OVERALL PROGRESS -->
+    <div class="overall-progress-card section-gap" style="margin-top:2rem">
+      <div class="overall-progress-num" id="overall-num">0%</div>
+      <div class="overall-progress-text">
+        <div class="overall-progress-label" id="overall-label">0 dari 7 bab telah diselesaikan</div>
+        <div class="overall-progress-bar-wrap">
+          <div class="overall-progress-bar-fill" id="overall-fill" style="width:0%"></div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="if(window.Progress) window.Progress.resetAllProgress()" title="Reset progress">
+        <i class="fa-solid fa-rotate-left"></i> Reset
+      </button>
+    </div>
+
+    <!-- GAME CARD -->
+    <div class="section-gap">
+      <a href="game/query-ninja.html" class="game-card-big">
+        <div class="game-card-emoji">🥷</div>
+        <div class="game-card-info">
+          <div class="game-card-title">Query Ninja</div>
+          <div class="game-card-desc">Game arcade edukatif — latih logika SQL AND, OR, NOT sambil bermain!</div>
+          <div class="game-card-hi">High Score: <span id="game-hi-score">0</span> poin</div>
+        </div>
+        <div class="game-card-cta">▶ Main Sekarang</div>
+      </a>
+    </div>
+
+    <!-- BAB CARDS -->
+    <div class="section-gap">
+      <div class="section-heading">
+        <h2>Materi Pembelajaran</h2>
+        <span class="section-heading-badge">7 Bab</span>
+      </div>
+      <div class="bab-grid">
+
+        <a href="modules/bab-1-pengenalan-database.html" class="bab-card" id="bab-card-1">
+          <div class="bab-card-header">
+            <span class="bab-card-num">Bab 1</span>
+            <span class="bab-card-status pending">● Belum</span>
+          </div>
+          <div class="bab-card-title">Pengenalan Sistem Basis Data</div>
+          <div class="bab-card-desc">Konsep data vs informasi, komponen DBMS, dan kenapa database ada di mana-mana.</div>
+          <div class="bab-card-meta">
+            <span><i class="fa-regular fa-clock"></i> ~15 menit</span>
+            <span><i class="fa-solid fa-circle-question"></i> 5 soal</span>
+          </div>
+        </a>
+
+        <a href="modules/bab-2-erd-perancangan.html" class="bab-card" id="bab-card-2">
+          <div class="bab-card-header">
+            <span class="bab-card-num">Bab 2</span>
+            <span class="bab-card-status pending">● Belum</span>
+          </div>
+          <div class="bab-card-title">ERD & Perancangan Database</div>
+          <div class="bab-card-desc">Merancang ERD dari studi kasus nyata dan mengkonversinya ke skema tabel relasional.</div>
+          <div class="bab-card-meta">
+            <span><i class="fa-regular fa-clock"></i> ~18 menit</span>
+            <span><i class="fa-solid fa-circle-question"></i> 5 soal</span>
+          </div>
+        </a>
+
+        <a href="modules/bab-3-ddl.html" class="bab-card" id="bab-card-3">
+          <div class="bab-card-header">
+            <span class="bab-card-num">Bab 3</span>
+            <span class="bab-card-status pending">● Belum</span>
+          </div>
+          <div class="bab-card-title">DDL — Mendefinisikan Struktur</div>
+          <div class="bab-card-desc">CREATE, ALTER, DROP — perintah untuk mendefinisikan dan memodifikasi struktur database.</div>
+          <div class="bab-card-meta">
+            <span><i class="fa-regular fa-clock"></i> ~20 menit</span>
+            <span><i class="fa-solid fa-circle-question"></i> 5 soal</span>
+          </div>
+        </a>
+
+        <a href="modules/bab-4-dml.html" class="bab-card" id="bab-card-4">
+          <div class="bab-card-header">
+            <span class="bab-card-num">Bab 4</span>
+            <span class="bab-card-status pending">● Belum</span>
+          </div>
+          <div class="bab-card-title">DML — Memanipulasi Data</div>
+          <div class="bab-card-desc">SELECT, INSERT, UPDATE, DELETE — plus SQL Playground interaktif untuk latihan langsung di browser.</div>
+          <div class="bab-card-meta">
+            <span><i class="fa-regular fa-clock"></i> ~25 menit</span>
+            <span><i class="fa-solid fa-circle-question"></i> 5 soal</span>
+          </div>
+        </a>
+
+        <a href="modules/bab-5-normalisasi.html" class="bab-card" id="bab-card-5">
+          <div class="bab-card-header">
+            <span class="bab-card-num">Bab 5</span>
+            <span class="bab-card-status pending">● Belum</span>
+          </div>
+          <div class="bab-card-title">Normalisasi Database</div>
+          <div class="bab-card-desc">1NF, 2NF, 3NF — cara mengorganisir tabel agar bebas dari anomali dan redundansi data.</div>
+          <div class="bab-card-meta">
+            <span><i class="fa-regular fa-clock"></i> ~20 menit</span>
+            <span><i class="fa-solid fa-circle-question"></i> 5 soal</span>
+          </div>
+        </a>
+
+        <a href="modules/bab-6-join-subquery.html" class="bab-card" id="bab-card-6">
+          <div class="bab-card-header">
+            <span class="bab-card-num">Bab 6</span>
+            <span class="bab-card-status pending">● Belum</span>
+          </div>
+          <div class="bab-card-title">JOIN & Subquery</div>
+          <div class="bab-card-desc">INNER JOIN, LEFT JOIN, subquery — teknik mengambil data dari beberapa tabel sekaligus.</div>
+          <div class="bab-card-meta">
+            <span><i class="fa-regular fa-clock"></i> ~22 menit</span>
+            <span><i class="fa-solid fa-circle-question"></i> 5 soal</span>
+          </div>
+        </a>
+
+        <a href="modules/bab-7-objek-lanjutan.html" class="bab-card" id="bab-card-7">
+          <div class="bab-card-header">
+            <span class="bab-card-num">Bab 7</span>
+            <span class="bab-card-status pending">● Belum</span>
+          </div>
+          <div class="bab-card-title">Objek Database Lanjutan</div>
+          <div class="bab-card-desc">VIEW, Stored Procedure, Trigger, dan Transaksi — otomasi dan abstraksi operasi database.</div>
+          <div class="bab-card-meta">
+            <span><i class="fa-regular fa-clock"></i> ~25 menit</span>
+            <span><i class="fa-solid fa-circle-question"></i> 5 soal</span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- QUICK LINKS -->
+    <div class="section-gap">
+      <div class="section-heading">
+        <h2>Sumber Pendukung</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem">
+        <a href="glossarium.html" class="ref-card">
+          <div class="ref-card-icon">📖</div>
+          <div class="ref-card-name">Glossarium</div>
+          <div class="ref-card-desc">60+ istilah database beserta definisi lengkap dengan pencarian real-time.</div>
+          <span class="ref-card-link">Buka Glossarium <i class="fa-solid fa-arrow-right" style="font-size:.65rem"></i></span>
+        </a>
+        <a href="https://dev.mysql.com/doc/" target="_blank" rel="noopener" class="ref-card">
+          <div class="ref-card-icon">🐬</div>
+          <div class="ref-card-name">MySQL Docs</div>
+          <div class="ref-card-desc">Dokumentasi resmi MySQL — referensi lengkap semua perintah SQL.</div>
+          <span class="ref-card-link">Kunjungi <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.65rem"></i></span>
+        </a>
+        <a href="https://w3schools.com/sql" target="_blank" rel="noopener" class="ref-card">
+          <div class="ref-card-icon">🌐</div>
+          <div class="ref-card-name">W3Schools SQL</div>
+          <div class="ref-card-desc">Tutorial SQL interaktif dengan Try-it-Yourself editor langsung di browser.</div>
+          <span class="ref-card-link">Kunjungi <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.65rem"></i></span>
+        </a>
+        <a href="https://sqlzoo.net" target="_blank" rel="noopener" class="ref-card">
+          <div class="ref-card-icon">🦁</div>
+          <div class="ref-card-name">SQLZoo</div>
+          <div class="ref-card-desc">Latihan SQL interaktif dengan berbagai level — dari dasar hingga mahir.</div>
+          <span class="ref-card-link">Kunjungi <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.65rem"></i></span>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /index-content -->
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <strong style="color:#64748b">E-Modul Basis Data</strong> · SMK PPLG · Kelas XI · Kurikulum Merdeka Belajar · MySQL 8.x
+  </footer>
+</main>
+
+<script src="assets/js/progress.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

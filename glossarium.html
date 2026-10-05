@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glossarium — Kamus Istilah Database | E-Modul Basis Data</title>
+<link rel="stylesheet" href="assets/css/custom.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="assets/js/dark-mode.js"></script>
+</head>
+<body data-page="glossarium">
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<header class="header">
+  <button class="btn-icon hamburger-btn" id="hamburger-btn"><i class="fa-solid fa-bars"></i></button>
+  <a href="index.html" class="header-logo">
+    <div class="header-logo-icon">🗄️</div>
+    <div><span class="header-logo-text">E-Modul Basis Data</span><span class="header-logo-sub">SMK PPLG · Kelas XI</span></div>
+  </a>
+  <div class="header-spacer"></div>
+  <nav class="header-nav">
+    <button class="btn-icon" id="dark-toggle"><i class="fa-solid fa-moon"></i></button>
+    <a href="game/query-ninja.html" class="btn-game-nav"><i class="fa-solid fa-gamepad"></i> Query Ninja</a>
+  </nav>
+</header>
+<aside class="sidebar" id="sidebar"></aside>
+<main class="main-content">
+<div class="content-wrapper">
+  <nav class="breadcrumb">
+    <a href="index.html">Beranda</a><span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">Glossarium</span>
+  </nav>
+  <div class="bab-hero">
+    <div class="bab-num-badge"><i class="fa-solid fa-book-open"></i> Referensi</div>
+    <h1 class="bab-title">Glossarium — Kamus Istilah Database</h1>
+    <div class="bab-meta">
+      <span class="bab-meta-item"><i class="fa-solid fa-list"></i> 60+ istilah</span>
+      <span class="bab-meta-item"><i class="fa-solid fa-magnifying-glass"></i> Pencarian real-time</span>
+    </div>
+  </div>
+
+  <div class="gloss-search-wrap">
+    <i class="fa-solid fa-magnifying-glass gloss-search-icon"></i>
+    <input type="text" id="gloss-search" class="gloss-search" placeholder="Cari istilah atau definisi...">
+  </div>
+  <div class="gloss-count" id="gloss-count">Memuat...</div>
+  <div class="gloss-alpha-nav" id="gloss-alpha-nav"></div>
+  <div id="gloss-list"></div>
+</div>
+<footer class="footer">E-Modul Basis Data · SMK PPLG · Kelas XI · Kurikulum Merdeka</footer>
+</main>
+<script src="assets/js/progress.js"></script>
+<script src="assets/js/sidebar-template.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/glossary.js"></script>
+</body>
+</html>

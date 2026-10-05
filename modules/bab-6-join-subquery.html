@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bab 6 — JOIN &amp; Subquery | E-Modul Basis Data</title>
+<link rel="stylesheet" href="../assets/css/custom.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script src="../assets/js/dark-mode.js"></script>
+<style>
+.venn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;margin:1rem 0}
+.venn-card{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius);padding:1rem;cursor:pointer;transition:all .2s;text-align:center}
+.venn-card:hover,.venn-card.active{border-color:var(--c-primary-light);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.venn-card svg{display:block;margin:.5rem auto .6rem}
+.venn-card-name{font-family:'Space Grotesk',sans-serif;font-size:.82rem;font-weight:700;color:var(--c-text);margin-bottom:.2rem}
+.venn-card-desc{font-size:.72rem;color:var(--c-text-muted)}
+.venn-example{background:var(--c-code-bg);border:1px solid #334155;border-radius:var(--radius);padding:.875rem 1rem;margin-top:.75rem;display:none}
+.venn-example.show{display:block}
+.venn-example code{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#e2e8f0;white-space:pre}
+</style>
+</head>
+<body data-bab="bab6">
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<header class="header">
+  <button class="btn-icon hamburger-btn" id="hamburger-btn"><i class="fa-solid fa-bars"></i></button>
+  <a href="../index.html" class="header-logo">
+    <div class="header-logo-icon">🗄️</div>
+    <div><span class="header-logo-text">E-Modul Basis Data</span><span class="header-logo-sub">SMK PPLG · Kelas XI</span></div>
+  </a>
+  <div class="header-spacer"></div>
+  <nav class="header-nav">
+    <a href="../glossarium.html" class="btn-icon"><i class="fa-solid fa-book-open"></i></a>
+    <button class="btn-icon" id="dark-toggle"><i class="fa-solid fa-moon"></i></button>
+    <button class="btn-icon" id="btn-print"><i class="fa-solid fa-print"></i></button>
+    <a href="../game/query-ninja.html" class="btn-game-nav"><i class="fa-solid fa-gamepad"></i> Query Ninja</a>
+  </nav>
+</header>
+<aside class="sidebar" id="sidebar"></aside>
+<main class="main-content">
+<div class="content-wrapper">
+  <nav class="breadcrumb">
+    <a href="../index.html">Beranda</a><span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">Bab 6 — JOIN &amp; Subquery</span>
+  </nav>
+  <div class="bab-hero">
+    <div class="bab-num-badge"><i class="fa-solid fa-code-merge"></i> Bab 6 dari 7</div>
+    <h1 class="bab-title">JOIN &amp; Subquery</h1>
+    <div class="bab-meta">
+      <span class="bab-meta-item"><i class="fa-regular fa-clock"></i> <span id="read-time">⏱ memuat...</span></span>
+      <span class="bab-meta-item"><i class="fa-solid fa-signal"></i> Menengah–Lanjutan</span>
+      <span class="bab-meta-item"><i class="fa-solid fa-circle-question"></i> 5 soal quiz</span>
+    </div>
+    <div class="objectives-card">
+      <h4><i class="fa-solid fa-bullseye"></i> Tujuan Pembelajaran</h4>
+      <ul class="objectives-list">
+        <li>Menggunakan INNER JOIN untuk mengambil data yang cocok di dua tabel</li>
+        <li>Membedakan LEFT JOIN dan RIGHT JOIN beserta kasus penggunaannya</li>
+        <li>Menggunakan subquery di klausa WHERE, FROM, dan SELECT</li>
+        <li>Menerapkan EXISTS dan NOT EXISTS dalam subquery</li>
+        <li>Memilih antara JOIN dan subquery berdasarkan konteks query</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <section>
+      <h2>Mengapa JOIN Diperlukan?</h2>
+      <p>Setelah normalisasi (Bab 5), data kita tersebar di beberapa tabel. JOIN adalah cara SQL menggabungkan kembali data dari tabel-tabel itu dalam satu hasil query. Tanpa JOIN, kita tidak bisa menjawab pertanyaan seperti <em>"Siapa yang sedang meminjam buku apa?"</em> karena datanya ada di tiga tabel berbeda.</p>
+      <div class="info-box info">
+        <span class="info-box-icon">ℹ️</span>
+        <div class="info-box-content">
+          <strong>Analogi Sederhana</strong>
+          <p>JOIN seperti menyatukan dua daftar hadir berdasarkan nama yang sama. INNER JOIN hanya ambil yang ada di keduanya. LEFT JOIN ambil semua dari kiri, tambahkan data kanan jika ada.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Visualisasi Jenis JOIN — Klik untuk Lihat Contoh</h2>
+      <div class="venn-grid" id="venn-grid">
+
+        <div class="venn-card" data-join="inner">
+          <svg viewBox="0 0 80 50" width="80" height="50">
+            <circle cx="27" cy="25" r="20" fill="rgba(59,130,246,.15)" stroke="#3b82f6" stroke-width="1.5"/>
+            <circle cx="53" cy="25" r="20" fill="rgba(59,130,246,.15)" stroke="#3b82f6" stroke-width="1.5"/>
+            <path d="M40,7 A20,20,0,0,1,40,43 A20,20,0,0,1,40,7" fill="rgba(59,130,246,.5)"/>
+          </svg>
+          <div class="venn-card-name">INNER JOIN</div>
+          <div class="venn-card-desc">Hanya baris yang cocok di kedua tabel</div>
+        </div>
+
+        <div class="venn-card" data-join="left">
+          <svg viewBox="0 0 80 50" width="80" height="50">
+            <circle cx="27" cy="25" r="20" fill="rgba(249,115,22,.5)" stroke="#f97316" stroke-width="1.5"/>
+            <circle cx="53" cy="25" r="20" fill="rgba(249,115,22,.1)" stroke="#f97316" stroke-width="1.5"/>
+          </svg>
+          <div class="venn-card-name">LEFT JOIN</div>
+          <div class="venn-card-desc">Semua baris kiri + cocok dari kanan</div>
+        </div>
+
+        <div class="venn-card" data-join="right">
+          <svg viewBox="0 0 80 50" width="80" height="50">
+            <circle cx="27" cy="25" r="20" fill="rgba(16,185,129,.1)" stroke="#10b981" stroke-width="1.5"/>
+            <circle cx="53" cy="25" r="20" fill="rgba(16,185,129,.5)" stroke="#10b981" stroke-width="1.5"/>
+          </svg>
+          <div class="venn-card-name">RIGHT JOIN</div>
+          <div class="venn-card-desc">Semua baris kanan + cocok dari kiri</div>
+        </div>
+
+        <div class="venn-card" data-join="left-only">
+          <svg viewBox="0 0 80 50" width="80" height="50">
+            <circle cx="27" cy="25" r="20" fill="rgba(239,68,68,.5)" stroke="#ef4444" stroke-width="1.5"/>
+            <circle cx="53" cy="25" r="20" fill="rgba(239,68,68,.05)" stroke="#ef4444" stroke-width="1.5"/>
+            <path d="M40,7 A20,20,0,0,1,40,43 A20,20,0,0,1,40,7" fill="rgba(15,23,42,1)" opacity=".8"/>
+          </svg>
+          <div class="venn-card-name">LEFT ONLY</div>
+          <div class="venn-card-desc">Baris kiri yang TIDAK punya pasangan kanan</div>
+        </div>
+
+      </div>
+      <div class="venn-example" id="venn-example">
+        <code id="venn-code"></code>
+      </div>
+    </section>
+
+    <section>
+      <h2>INNER JOIN — Data yang Saling Cocok</h2>
+      <div class="code-wrap">
+        <span class="code-label">SQL — INNER JOIN</span>
+        <pre><code class="language-sql">-- Tampilkan daftar peminjaman aktif lengkap dengan nama anggota dan judul buku
+SELECT
+    a.nama_lengkap  AS Peminjam,
+    a.kelas,
+    b.judul         AS Judul_Buku,
+    b.genre,
+    p.tgl_pinjam,
+    p.status
+FROM peminjaman p
+INNER JOIN anggota a ON p.id_anggota = a.id_anggota
+INNER JOIN buku    b ON p.id_buku    = b.id_buku
+WHERE p.status = 'dipinjam'
+ORDER BY p.tgl_pinjam DESC;
+
+-- Hanya anggota yang pernah meminjam (punya riwayat di tabel peminjaman)
+SELECT DISTINCT a.nama_lengkap, a.kelas
+FROM anggota a
+INNER JOIN peminjaman p ON a.id_anggota = p.id_anggota;</code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>LEFT JOIN — Semua dari Kiri, Plus Pasangannya</h2>
+      <div class="code-wrap">
+        <span class="code-label">SQL — LEFT JOIN</span>
+        <pre><code class="language-sql">-- Semua anggota, TERMASUK yang belum pernah meminjam
+-- (anggota tanpa peminjaman → kolom dari tabel peminjaman akan NULL)
+SELECT
+    a.nama_lengkap,
+    a.kelas,
+    COUNT(p.id_pinjam) AS total_pinjam
+FROM anggota a
+LEFT JOIN peminjaman p ON a.id_anggota = p.id_anggota
+GROUP BY a.id_anggota, a.nama_lengkap, a.kelas
+ORDER BY total_pinjam DESC;
+
+-- Temukan anggota yang BELUM PERNAH meminjam (LEFT ONLY)
+SELECT a.nama_lengkap, a.kelas
+FROM anggota a
+LEFT JOIN peminjaman p ON a.id_anggota = p.id_anggota
+WHERE p.id_pinjam IS NULL;  -- NULL = tidak ada pasangan di tabel kanan</code></pre>
+      </div>
+      <div class="info-box tip">
+        <span class="info-box-icon">💡</span>
+        <div class="info-box-content">
+          <strong>Trik "LEFT ONLY"</strong>
+          <p>Pola <code>LEFT JOIN ... WHERE kanan.PK IS NULL</code> sangat berguna untuk menemukan data di satu tabel yang tidak punya pasangan di tabel lain — misalnya buku yang belum pernah dipinjam, atau anggota yang tidak aktif.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Subquery — Query di Dalam Query</h2>
+      <p><strong>Subquery</strong> (nested query) adalah SELECT yang diletakkan di dalam perintah SQL lain. Ada tiga posisi penempatan:</p>
+
+      <h3>Subquery di WHERE</h3>
+      <div class="code-wrap">
+        <span class="code-label">SQL — Subquery di WHERE</span>
+        <pre><code class="language-sql">-- Buku yang stoknya di atas rata-rata
+SELECT judul, stok
+FROM buku
+WHERE stok > (SELECT AVG(stok) FROM buku);
+
+-- Anggota yang PERNAH meminjam buku genre 'Teknologi'
+SELECT nama_lengkap, kelas
+FROM anggota
+WHERE id_anggota IN (
+    SELECT DISTINCT p.id_anggota
+    FROM peminjaman p
+    JOIN buku b ON p.id_buku = b.id_buku
+    WHERE b.genre = 'Teknologi'
+);
+
+-- Buku yang BELUM PERNAH dipinjam (NOT IN)
+SELECT judul, pengarang
+FROM buku
+WHERE id_buku NOT IN (
+    SELECT DISTINCT id_buku FROM peminjaman
+);</code></pre>
+      </div>
+
+      <h3>Subquery di FROM (Derived Table)</h3>
+      <div class="code-wrap">
+        <span class="code-label">SQL — Derived Table</span>
+        <pre><code class="language-sql">-- Rata-rata jumlah peminjaman per anggota
+SELECT AVG(total) AS rata_pinjam_per_anggota
+FROM (
+    SELECT id_anggota, COUNT(*) AS total
+    FROM peminjaman
+    GROUP BY id_anggota
+) AS stat_pinjam;
+-- Subquery di FROM harus diberi alias (AS stat_pinjam)</code></pre>
+      </div>
+
+      <h3>EXISTS vs IN — Mana yang Lebih Cepat?</h3>
+      <div class="code-wrap">
+        <span class="code-label">SQL — EXISTS</span>
+        <pre><code class="language-sql">-- EXISTS: lebih efisien untuk tabel besar
+-- (berhenti mencari begitu ketemu satu baris yang cocok)
+SELECT nama_lengkap
+FROM anggota a
+WHERE EXISTS (
+    SELECT 1 FROM peminjaman p
+    WHERE p.id_anggota = a.id_anggota
+    AND p.status = 'terlambat'
+);
+
+-- NOT EXISTS: anggota yang tidak punya peminjaman terlambat
+SELECT nama_lengkap
+FROM anggota a
+WHERE NOT EXISTS (
+    SELECT 1 FROM peminjaman p
+    WHERE p.id_anggota = a.id_anggota
+    AND p.status = 'terlambat'
+);</code></pre>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Aspek</th><th>IN / NOT IN</th><th>EXISTS / NOT EXISTS</th></tr></thead>
+          <tbody>
+            <tr><td>Cara kerja</td><td>Bandingkan nilai dengan semua hasil subquery</td><td>Cek apakah subquery mengembalikan baris (TRUE/FALSE)</td></tr>
+            <tr><td>Kinerja (tabel kecil)</td><td>Sebanding</td><td>Sebanding</td></tr>
+            <tr><td>Kinerja (tabel besar)</td><td>Lebih lambat — harus load semua hasil subquery</td><td>Lebih cepat — berhenti saat ketemu baris pertama</td></tr>
+            <tr><td>NULL handling</td><td>⚠️ Hati-hati — NOT IN dengan NULL bisa memberikan hasil tak terduga</td><td>Aman — tidak terpengaruh NULL</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="video-section">
+      <div class="video-section-title"><i class="fa-brands fa-youtube" style="color:#ef4444"></i> Video Pembelajaran</div>
+      <div class="video-wrapper">
+        <iframe src="https://www.youtube.com/embed/9yeOJ0ZMUYw"
+                title="Tutorial JOIN MySQL - INNER, LEFT, RIGHT JOIN Bahasa Indonesia"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <section>
+      <h2><i class="fa-solid fa-link" style="color:var(--c-primary-light);font-size:.9em"></i> Sumber Belajar</h2>
+      <div class="ref-grid">
+        <div class="ref-card"><div class="ref-card-icon">🌐</div><div class="ref-card-name">W3Schools SQL JOIN</div><div class="ref-card-desc">Penjelasan visual semua jenis JOIN dengan contoh Try-it langsung.</div><a href="https://www.w3schools.com/sql/sql_join.asp" target="_blank" rel="noopener" class="ref-card-link">Buka <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+        <div class="ref-card"><div class="ref-card-icon">🦁</div><div class="ref-card-name">SQLZoo — JOIN</div><div class="ref-card-desc">Soal latihan JOIN interaktif dari level dasar hingga lanjutan.</div><a href="https://sqlzoo.net/wiki/The_JOIN_operation" target="_blank" rel="noopener" class="ref-card-link">Buka <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+        <div class="ref-card"><div class="ref-card-icon">🐬</div><div class="ref-card-name">MySQL JOIN Docs</div><div class="ref-card-desc">Dokumentasi resmi semua sintaks JOIN di MySQL 8.x.</div><a href="https://dev.mysql.com/doc/refman/8.0/en/join.html" target="_blank" rel="noopener" class="ref-card-link">Buka <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+      </div>
+    </section>
+
+    <div class="quiz-section">
+      <div class="quiz-header">
+        <h3><i class="fa-solid fa-circle-question"></i> Quiz Bab 6</h3>
+        <div class="quiz-progress-bar-wrap"><div class="quiz-progress-bar-fill" style="width:0%"></div></div>
+      </div>
+      <div id="quiz-container"></div>
+    </div>
+
+    <button class="btn-mark-done" id="btn-mark-done" data-bab="bab6">
+      <i class="fa-solid fa-check-circle"></i> Tandai Bab Ini Selesai
+    </button>
+
+    <nav class="bab-nav">
+      <a href="bab-5-normalisasi.html" class="bab-nav-btn">
+        <i class="fa-solid fa-chevron-left" style="color:var(--c-text-muted)"></i>
+        <div><span class="bab-nav-label">Bab Sebelumnya</span><span class="bab-nav-title">← Normalisasi Database</span></div>
+      </a>
+      <a href="bab-7-objek-lanjutan.html" class="bab-nav-btn next">
+        <div><span class="bab-nav-label">Bab Berikutnya</span><span class="bab-nav-title">Objek Database Lanjutan →</span></div>
+        <i class="fa-solid fa-chevron-right" style="color:var(--c-text-muted)"></i>
+      </a>
+    </nav>
+  </div>
+</div>
+<footer class="footer">E-Modul Basis Data · SMK PPLG · Kelas XI · Bab 6 dari 7</footer>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+<script src="../assets/js/progress.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script src="../assets/js/sidebar-template.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/print.js"></script>
+<script>
+const JOIN_EXAMPLES = {
+  inner: `SELECT a.nama_lengkap, b.judul, p.tgl_pinjam
+FROM peminjaman p
+INNER JOIN anggota a ON p.id_anggota = a.id_anggota
+INNER JOIN buku    b ON p.id_buku    = b.id_buku;
+-- Hanya baris yang ada di KEDUA tabel`,
+  left: `SELECT a.nama_lengkap, COUNT(p.id_pinjam) AS total
+FROM anggota a
+LEFT JOIN peminjaman p ON a.id_anggota = p.id_anggota
+GROUP BY a.id_anggota;
+-- Semua anggota, termasuk yang belum pernah meminjam`,
+  right: `SELECT b.judul, COUNT(p.id_pinjam) AS dipinjam
+FROM peminjaman p
+RIGHT JOIN buku b ON p.id_buku = b.id_buku
+GROUP BY b.id_buku;
+-- Semua buku, termasuk yang belum pernah dipinjam`,
+  'left-only': `SELECT a.nama_lengkap, a.kelas
+FROM anggota a
+LEFT JOIN peminjaman p ON a.id_anggota = p.id_anggota
+WHERE p.id_pinjam IS NULL;
+-- Anggota yang BELUM PERNAH meminjam buku`
+};
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.venn-card').forEach(card => {
+    card.addEventListener('click', function() {
+      const join = this.dataset.join;
+      const exEl = document.getElementById('venn-example');
+      const codeEl = document.getElementById('venn-code');
+      document.querySelectorAll('.venn-card').forEach(c => c.classList.remove('active'));
+      if (exEl.classList.contains('show') && this.classList.contains('was-active')) {
+        exEl.classList.remove('show'); this.classList.remove('was-active'); return;
+      }
+      document.querySelectorAll('.venn-card').forEach(c => c.classList.remove('was-active'));
+      this.classList.add('active','was-active');
+      codeEl.textContent = JOIN_EXAMPLES[join];
+      exEl.classList.add('show');
+    });
+  });
+});
+const quizData = [
+  {id:1,type:'multiple_choice',question:'Kamu ingin menampilkan SEMUA anggota beserta jumlah buku yang dipinjam, termasuk anggota yang belum pernah meminjam. JOIN apa yang tepat?',
+   options:['INNER JOIN','LEFT JOIN dari tabel anggota','RIGHT JOIN dari tabel peminjaman','CROSS JOIN'],
+   correct:1,explanation:'LEFT JOIN dari tabel anggota memastikan semua anggota tampil. Anggota yang belum pernah meminjam akan memiliki NULL pada kolom dari tabel peminjaman, yang bisa dihitung COUNT sebagai 0.'},
+  {id:2,type:'multiple_choice',question:'Apa hasil dari query: SELECT * FROM A INNER JOIN B ON A.id = B.id_a — jika ada baris di tabel A yang tidak memiliki pasangan di tabel B?',
+   options:['Baris dari A tetap muncul dengan NULL di kolom B','Baris tersebut tidak muncul sama sekali','Query error','Baris duplikat untuk setiap baris di B'],
+   correct:1,explanation:'INNER JOIN hanya mengembalikan baris yang memiliki pasangan yang cocok di kedua tabel. Baris di A tanpa pasangan di B tidak akan muncul dalam hasil.'},
+  {id:3,type:'multiple_choice',question:'Subquery yang ditempatkan di klausa FROM dan diberi alias disebut?',
+   options:['Correlated Subquery','Derived Table / Inline View','Nested Subquery','Scalar Subquery'],
+   correct:1,explanation:'Subquery di FROM disebut Derived Table atau Inline View. Wajib diberi alias dan diperlakukan seperti tabel biasa di query luar.'},
+  {id:4,type:'fill_sql',question:'Tulis query untuk menemukan buku yang TIDAK PERNAH dipinjam (gunakan NOT IN dengan subquery):',
+   correct:'SELECT judul FROM buku WHERE id_buku NOT IN (SELECT DISTINCT id_buku FROM peminjaman)',
+   alternatives:['select judul from buku where id_buku not in (select distinct id_buku from peminjaman)'],
+   explanation:'NOT IN dengan subquery yang mengambil semua id_buku dari tabel peminjaman akan mengembalikan buku-buku yang id-nya tidak ada di daftar tersebut.'},
+  {id:5,type:'multiple_choice',question:'Kenapa EXISTS lebih direkomendasikan dibanding IN untuk tabel dengan jutaan baris?',
+   options:['Karena EXISTS lebih mudah ditulis','EXISTS berhenti mencari saat menemukan baris pertama yang cocok, IN harus memuat semua hasil subquery dulu','EXISTS selalu menghasilkan lebih sedikit baris','Tidak ada perbedaan performa'],
+   correct:1,explanation:'EXISTS menggunakan short-circuit evaluation — begitu menemukan satu baris yang memenuhi kondisi, langsung berhenti. IN harus mengevaluasi seluruh hasil subquery terlebih dahulu, yang bisa sangat lambat untuk data besar.'}
+];
+document.addEventListener('DOMContentLoaded',()=>Quiz.init(quizData,'bab6','quiz-container'));
+</script>
+</body>
+</html>

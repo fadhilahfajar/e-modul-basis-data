@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bab 2 — ERD & Perancangan Database | E-Modul Basis Data</title>
+<link rel="stylesheet" href="../assets/css/custom.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script src="../assets/js/dark-mode.js"></script>
+<style>
+.erd-svg-wrap { background:var(--c-surface-2); border:1px solid var(--c-border); border-radius:var(--radius-lg); padding:1.5rem; overflow-x:auto; margin:1.25rem 0; }
+.erd-svg-wrap svg { display:block; margin:auto; }
+</style>
+</head>
+<body data-bab="bab2">
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<header class="header">
+  <button class="btn-icon hamburger-btn" id="hamburger-btn"><i class="fa-solid fa-bars"></i></button>
+  <a href="../index.html" class="header-logo">
+    <div class="header-logo-icon">🗄️</div>
+    <div><span class="header-logo-text">E-Modul Basis Data</span><span class="header-logo-sub">SMK PPLG · Kelas XI</span></div>
+  </a>
+  <div class="header-spacer"></div>
+  <nav class="header-nav">
+    <a href="../glossarium.html" class="btn-icon" title="Glossarium"><i class="fa-solid fa-book-open"></i></a>
+    <button class="btn-icon" id="dark-toggle"><i class="fa-solid fa-moon"></i></button>
+    <button class="btn-icon" id="btn-print" title="Cetak"><i class="fa-solid fa-print"></i></button>
+    <a href="../game/query-ninja.html" class="btn-game-nav"><i class="fa-solid fa-gamepad"></i> Query Ninja</a>
+  </nav>
+</header>
+
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main-content">
+<div class="content-wrapper">
+
+  <nav class="breadcrumb">
+    <a href="../index.html">Beranda</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">Bab 2 — ERD &amp; Perancangan Database</span>
+  </nav>
+
+  <div class="bab-hero">
+    <div class="bab-num-badge"><i class="fa-solid fa-diagram-project"></i> Bab 2 dari 7</div>
+    <h1 class="bab-title">ERD &amp; Perancangan Database</h1>
+    <div class="bab-meta">
+      <span class="bab-meta-item"><i class="fa-regular fa-clock"></i> <span id="read-time">⏱ memuat...</span></span>
+      <span class="bab-meta-item"><i class="fa-solid fa-signal"></i> Dasar–Menengah</span>
+      <span class="bab-meta-item"><i class="fa-solid fa-circle-question"></i> 5 soal quiz</span>
+    </div>
+    <div class="objectives-card">
+      <h4><i class="fa-solid fa-bullseye"></i> Tujuan Pembelajaran</h4>
+      <ul class="objectives-list">
+        <li>Mengidentifikasi entitas, atribut, dan relasi dari studi kasus nyata</li>
+        <li>Menggambar ERD menggunakan notasi Chen dan Crow's Foot</li>
+        <li>Menentukan kardinalitas relasi (1:1, 1:N, M:N)</li>
+        <li>Membedakan Primary Key dan Foreign Key beserta fungsinya</li>
+        <li>Mengkonversi ERD menjadi skema tabel SQL siap pakai</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="content-area">
+
+    <section>
+      <h2>Entitas — Objek yang Punya Data</h2>
+      <p>Sebelum menulis satu baris SQL, seorang database designer selalu bertanya: <em>"Objek apa saja yang perlu kita rekam datanya?"</em>. Jawaban pertanyaan itulah yang disebut <strong>entitas</strong>.</p>
+      <p>Dalam konteks perpustakaan sekolah kita, entitas utamanya adalah:</p>
+      <ul>
+        <li><strong>ANGGOTA</strong> — siswa yang terdaftar dan bisa meminjam buku</li>
+        <li><strong>BUKU</strong> — koleksi buku yang tersedia di perpustakaan</li>
+        <li><strong>PEMINJAMAN</strong> — transaksi peminjaman yang menghubungkan anggota dengan buku</li>
+        <li><strong>PETUGAS</strong> — staf perpustakaan yang mengelola sistem</li>
+      </ul>
+
+      <h3>Jenis-jenis Atribut</h3>
+      <p>Setiap entitas memiliki <strong>atribut</strong> — properti yang mendeskripsikan entitas tersebut. Ada beberapa jenisnya:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Jenis Atribut</th><th>Definisi</th><th>Contoh (Entitas: ANGGOTA)</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Simple</strong></td><td>Nilai tunggal, tidak bisa dibagi lagi</td><td>NIS, Kelas</td></tr>
+            <tr><td><strong>Composite</strong></td><td>Tersusun dari beberapa atribut</td><td>Nama Lengkap (nama depan + belakang)</td></tr>
+            <tr><td><strong>Derived</strong></td><td>Nilai diturunkan dari atribut lain</td><td>Usia (dari Tanggal Lahir)</td></tr>
+            <tr><td><strong>Multi-value</strong></td><td>Bisa punya lebih dari satu nilai</td><td>No. Telepon (bisa 2 nomor)</td></tr>
+            <tr><td><strong>Key</strong></td><td>Unik, mengidentifikasi setiap instance</td><td>NIS (tidak ada dua siswa ber-NIS sama)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kardinalitas — Berapa Banyak yang Berelasi?</h2>
+      <p>Relasi antar entitas punya "aturan kuantitas" yang disebut <strong>kardinalitas</strong>. Ini kritis karena menentukan bagaimana tabel nantinya dirancang.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tipe</th><th>Notasi</th><th>Arti</th><th>Contoh</th></tr></thead>
+          <tbody>
+            <tr><td><strong>One-to-One (1:1)</strong></td><td>1 — 1</td><td>Satu entitas A hanya berelasi dengan satu entitas B</td><td>Satu petugas memiliki satu akun login</td></tr>
+            <tr><td><strong>One-to-Many (1:N)</strong></td><td>1 — N</td><td>Satu entitas A dapat berelasi dengan banyak entitas B</td><td>Satu anggota bisa melakukan banyak peminjaman</td></tr>
+            <tr><td><strong>Many-to-Many (M:N)</strong></td><td>M — N</td><td>Banyak entitas A berelasi dengan banyak entitas B</td><td>Satu anggota bisa pinjam banyak buku; satu buku bisa dipinjam banyak anggota</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-box warn">
+        <span class="info-box-icon">⚠️</span>
+        <div class="info-box-content">
+          <strong>Relasi M:N Harus Dipecah!</strong>
+          <p>Database relasional tidak bisa langsung menyimpan relasi Many-to-Many. Kita harus membuat <strong>tabel penghubung</strong> (bridge/junction table). Itulah fungsi tabel <code>peminjaman</code> — ia menghubungkan <code>anggota</code> dan <code>buku</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ERD Sistem Perpustakaan Sekolah</h2>
+      <p>Berikut adalah ERD lengkap untuk sistem perpustakaan yang kita bangun. Diagram ini yang akan menjadi acuan seluruh contoh SQL di bab-bab selanjutnya.</p>
+
+      <div class="erd-svg-wrap">
+        <svg viewBox="0 0 760 420" width="100%" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif;max-width:760px">
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#475569"/>
+            </marker>
+          </defs>
+          <!-- ANGGOTA box -->
+          <rect x="30" y="160" width="160" height="110" rx="10" fill="rgba(29,78,216,0.1)" stroke="#3b82f6" stroke-width="1.5"/>
+          <text x="110" y="180" text-anchor="middle" fill="#93c5fd" font-weight="700" font-size="13">ANGGOTA</text>
+          <line x1="50" y1="188" x2="170" y2="188" stroke="#1e40af" stroke-width="0.8"/>
+          <text x="50" y="204" fill="#94a3b8" font-size="11">🔑 id_anggota (PK)</text>
+          <text x="50" y="218" fill="#94a3b8" font-size="11">   nis (UNIQUE)</text>
+          <text x="50" y="232" fill="#94a3b8" font-size="11">   nama_lengkap</text>
+          <text x="50" y="246" fill="#94a3b8" font-size="11">   kelas, status</text>
+
+          <!-- PEMINJAMAN box -->
+          <rect x="300" y="145" width="168" height="135" rx="10" fill="rgba(245,158,11,0.08)" stroke="#f59e0b" stroke-width="1.5"/>
+          <text x="384" y="165" text-anchor="middle" fill="#fcd34d" font-weight="700" font-size="13">PEMINJAMAN</text>
+          <line x1="315" y1="173" x2="453" y2="173" stroke="#92400e" stroke-width="0.8"/>
+          <text x="315" y="189" fill="#94a3b8" font-size="11">🔑 id_pinjam (PK)</text>
+          <text x="315" y="203" fill="#94a3b8" font-size="11">🔗 id_anggota (FK)</text>
+          <text x="315" y="217" fill="#94a3b8" font-size="11">🔗 id_buku (FK)</text>
+          <text x="315" y="231" fill="#94a3b8" font-size="11">   tgl_pinjam</text>
+          <text x="315" y="245" fill="#94a3b8" font-size="11">   tgl_kembali, status</text>
+
+          <!-- BUKU box -->
+          <rect x="570" y="155" width="165" height="125" rx="10" fill="rgba(16,185,129,0.08)" stroke="#10b981" stroke-width="1.5"/>
+          <text x="652" y="175" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="13">BUKU</text>
+          <line x1="585" y1="183" x2="720" y2="183" stroke="#065f46" stroke-width="0.8"/>
+          <text x="585" y="199" fill="#94a3b8" font-size="11">🔑 id_buku (PK)</text>
+          <text x="585" y="213" fill="#94a3b8" font-size="11">   isbn (UNIQUE)</text>
+          <text x="585" y="227" fill="#94a3b8" font-size="11">   judul, pengarang</text>
+          <text x="585" y="241" fill="#94a3b8" font-size="11">   genre, stok</text>
+          <text x="585" y="255" fill="#94a3b8" font-size="11">   tahun_terbit</text>
+
+          <!-- PETUGAS box -->
+          <rect x="300" y="320" width="168" height="82" rx="10" fill="rgba(139,92,246,0.08)" stroke="#8b5cf6" stroke-width="1.5"/>
+          <text x="384" y="340" text-anchor="middle" fill="#c4b5fd" font-weight="700" font-size="13">PETUGAS</text>
+          <line x1="315" y1="348" x2="453" y2="348" stroke="#4c1d95" stroke-width="0.8"/>
+          <text x="315" y="364" fill="#94a3b8" font-size="11">🔑 id_petugas (PK)</text>
+          <text x="315" y="378" fill="#94a3b8" font-size="11">   nama, username</text>
+          <text x="315" y="392" fill="#94a3b8" font-size="11">   password_hash</text>
+
+          <!-- Relations: ANGGOTA → PEMINJAMAN -->
+          <line x1="190" y1="212" x2="300" y2="212" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+          <text x="240" y="205" text-anchor="middle" fill="#64748b" font-size="10">1</text>
+          <text x="290" y="205" text-anchor="middle" fill="#64748b" font-size="10">N</text>
+
+          <!-- Relations: PEMINJAMAN → BUKU -->
+          <line x1="468" y1="212" x2="570" y2="212" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+          <text x="480" y="205" text-anchor="middle" fill="#64748b" font-size="10">N</text>
+          <text x="560" y="205" text-anchor="middle" fill="#64748b" font-size="10">1</text>
+
+          <!-- Relations: PETUGAS → PEMINJAMAN (mengelola) -->
+          <line x1="384" y1="320" x2="384" y2="280" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+          <text x="395" y="305" fill="#64748b" font-size="10">mengelola</text>
+
+          <!-- Legend -->
+          <rect x="30" y="30" width="300" height="70" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+          <text x="42" y="48" fill="#64748b" font-size="11" font-weight="600">LEGENDA</text>
+          <text x="42" y="64" fill="#93c5fd" font-size="11">🔑 PK = Primary Key</text>
+          <text x="42" y="78" fill="#94a3b8" font-size="11">🔗 FK = Foreign Key (merujuk ke PK tabel lain)</text>
+          <line x1="42" y1="88" x2="80" y2="88" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <text x="84" y="91" fill="#64748b" font-size="11">= Relasi (garis putus-putus)</text>
+        </svg>
+      </div>
+    </section>
+
+    <section>
+      <h2>Primary Key vs Foreign Key</h2>
+      <p>Dua jenis kunci ini adalah pondasi dari database relasional — memahaminya dengan benar akan menghindarkan kamu dari error saat mengerjakan JOIN.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Aspek</th><th>Primary Key (PK)</th><th>Foreign Key (FK)</th></tr></thead>
+          <tbody>
+            <tr><td>Fungsi</td><td>Mengidentifikasi baris secara unik dalam tabelnya sendiri</td><td>Merujuk ke PK di tabel lain untuk membuat relasi</td></tr>
+            <tr><td>Nilai NULL?</td><td>❌ Tidak boleh NULL</td><td>✅ Bisa NULL (jika relasi opsional)</td></tr>
+            <tr><td>Duplikat?</td><td>❌ Tidak boleh duplikat</td><td>✅ Boleh duplikat (banyak peminjaman dari anggota yang sama)</td></tr>
+            <tr><td>Jumlah per tabel</td><td>Tepat satu PK (bisa composite)</td><td>Bisa banyak FK</td></tr>
+            <tr><td>Contoh</td><td><code>id_anggota</code> di tabel <code>anggota</code></td><td><code>id_anggota</code> di tabel <code>peminjaman</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Konversi ERD ke SQL</h3>
+      <p>Setiap entitas di ERD menjadi satu tabel. Atribut menjadi kolom. Relasi diimplementasikan melalui Foreign Key.</p>
+      <div class="code-wrap">
+        <span class="code-label">SQL — Implementasi ERD ke Tabel</span>
+        <pre><code class="language-sql">-- Entitas ANGGOTA → Tabel anggota
+CREATE TABLE anggota (
+    id_anggota    INT AUTO_INCREMENT PRIMARY KEY,  -- PK
+    nis           VARCHAR(10) NOT NULL UNIQUE,
+    nama_lengkap  VARCHAR(100) NOT NULL,
+    kelas         VARCHAR(10) NOT NULL,
+    status        ENUM('aktif','nonaktif') DEFAULT 'aktif'
+);
+
+-- Entitas BUKU → Tabel buku
+CREATE TABLE buku (
+    id_buku      INT AUTO_INCREMENT PRIMARY KEY,   -- PK
+    isbn         VARCHAR(20) NOT NULL UNIQUE,
+    judul        VARCHAR(200) NOT NULL,
+    stok         INT DEFAULT 0 CHECK (stok >= 0)
+);
+
+-- Relasi M:N → Tabel penghubung peminjaman
+CREATE TABLE peminjaman (
+    id_pinjam  INT AUTO_INCREMENT PRIMARY KEY,
+    id_anggota INT NOT NULL,
+    id_buku    INT NOT NULL,
+    tgl_pinjam DATE DEFAULT (CURRENT_DATE),
+    status     ENUM('dipinjam','dikembalikan','terlambat') DEFAULT 'dipinjam',
+    -- Foreign Keys mengimplementasikan garis relasi di ERD:
+    FOREIGN KEY (id_anggota) REFERENCES anggota(id_anggota),
+    FOREIGN KEY (id_buku)    REFERENCES buku(id_buku)
+);</code></pre>
+      </div>
+      <div class="info-box tip">
+        <span class="info-box-icon">💡</span>
+        <div class="info-box-content">
+          <strong>Urutan CREATE TABLE Penting!</strong>
+          <p>Tabel yang mengandung Foreign Key harus dibuat <em>setelah</em> tabel yang dirujuknya. Buat <code>anggota</code> dan <code>buku</code> dulu, baru <code>peminjaman</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Langkah Merancang Database dari Studi Kasus</h2>
+      <p>Ini adalah alur yang digunakan profesional saat merancang database dari kebutuhan bisnis:</p>
+      <ol>
+        <li><strong>Baca dan pahami kebutuhan</strong> — identifikasi siapa penggunanya dan apa yang perlu dilakukan sistem</li>
+        <li><strong>Identifikasi entitas</strong> — kata benda penting dalam kebutuhan = calon entitas</li>
+        <li><strong>Tentukan atribut</strong> — data apa yang perlu disimpan untuk setiap entitas</li>
+        <li><strong>Identifikasi relasi</strong> — bagaimana entitas-entitas saling berhubungan</li>
+        <li><strong>Tentukan kardinalitas</strong> — 1:1, 1:N, atau M:N untuk setiap relasi</li>
+        <li><strong>Gambar ERD</strong> — visualisasikan menggunakan notasi yang dipilih</li>
+        <li><strong>Validasi</strong> — periksa apakah semua kebutuhan tercakup</li>
+        <li><strong>Konversi ke SQL</strong> — buat CREATE TABLE berdasarkan ERD</li>
+      </ol>
+    </section>
+
+    <!-- VIDEO -->
+    <div class="video-section">
+      <div class="video-section-title"><i class="fa-brands fa-youtube" style="color:#ef4444"></i> Video Pembelajaran</div>
+      <div class="video-wrapper" data-video-url="https://www.youtube.com/results?search_query=cara+membuat+ERD+database+bahasa+indonesia">
+        <iframe src="https://www.youtube.com/embed/QpdhBUYk7Kk"
+                title="Cara Membuat ERD Entity Relationship Diagram — Bahasa Indonesia"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <section>
+      <h2><i class="fa-solid fa-link" style="color:var(--c-primary-light);font-size:.9em"></i> Sumber Belajar</h2>
+      <div class="ref-grid">
+        <div class="ref-card"><div class="ref-card-icon">🎨</div><div class="ref-card-name">ERDPlus</div><div class="ref-card-desc">Tool online gratis untuk membuat ERD, Relational Schema, dan Star Schema.</div><a href="https://erdplus.com" target="_blank" rel="noopener" class="ref-card-link">Buka Tool <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+        <div class="ref-card"><div class="ref-card-icon">🖊️</div><div class="ref-card-name">draw.io</div><div class="ref-card-desc">Aplikasi diagram gratis — bisa untuk ERD, flowchart, arsitektur sistem.</div><a href="https://draw.io" target="_blank" rel="noopener" class="ref-card-link">Buka Tool <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+        <div class="ref-card"><div class="ref-card-icon">🗄️</div><div class="ref-card-name">DB Designer</div><div class="ref-card-desc">Tool visual online untuk merancang skema database dan mengekspor ke SQL.</div><a href="https://dbdesigner.net" target="_blank" rel="noopener" class="ref-card-link">Buka Tool <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+      </div>
+    </section>
+
+    <!-- QUIZ -->
+    <div class="quiz-section">
+      <div class="quiz-header">
+        <h3><i class="fa-solid fa-circle-question"></i> Quiz Bab 2</h3>
+        <p style="font-size:.82rem;color:var(--c-text-muted);margin:.2rem 0 0">Uji pemahamanmu tentang ERD sebelum ke Bab 3.</p>
+        <div class="quiz-progress-bar-wrap"><div class="quiz-progress-bar-fill" style="width:0%"></div></div>
+      </div>
+      <div id="quiz-container"></div>
+    </div>
+
+    <button class="btn-mark-done" id="btn-mark-done" data-bab="bab2">
+      <i class="fa-solid fa-check-circle"></i> Tandai Bab Ini Selesai
+    </button>
+
+    <nav class="bab-nav">
+      <a href="bab-1-pengenalan-database.html" class="bab-nav-btn prev">
+        <i class="fa-solid fa-chevron-left" style="color:var(--c-text-muted)"></i>
+        <div><span class="bab-nav-label">Bab Sebelumnya</span><span class="bab-nav-title">← Pengenalan Database</span></div>
+      </a>
+      <a href="bab-3-ddl.html" class="bab-nav-btn next">
+        <div><span class="bab-nav-label">Bab Berikutnya</span><span class="bab-nav-title">DDL — Struktur Database →</span></div>
+        <i class="fa-solid fa-chevron-right" style="color:var(--c-text-muted)"></i>
+      </a>
+    </nav>
+  </div>
+</div>
+<footer class="footer">E-Modul Basis Data · SMK PPLG · Kelas XI · Bab 2 dari 7</footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+<script src="../assets/js/progress.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script src="../assets/js/sidebar-template.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/print.js"></script>
+<script>
+const quizData = [
+  {id:1,type:'multiple_choice',question:'Dalam ERD, apa yang dimaksud dengan "Entitas"?',
+   options:['Kolom dalam tabel database','Objek di dunia nyata yang perlu disimpan datanya','Hubungan antara dua tabel','Nilai unik yang mengidentifikasi baris'],
+   correct:1,explanation:'Entitas adalah objek atau konsep dunia nyata yang data-datanya perlu direkam. Contoh: Siswa, Buku, Karyawan.'},
+  {id:2,type:'multiple_choice',question:'Perpustakaan mencatat bahwa satu buku bisa dipinjam oleh banyak siswa, dan satu siswa bisa meminjam banyak buku. Jenis kardinalitas ini adalah?',
+   options:['One-to-One (1:1)','One-to-Many (1:N)','Many-to-Many (M:N)','Zero-to-Many (0:N)'],
+   correct:2,explanation:'Ini adalah relasi Many-to-Many (M:N). Solusinya adalah membuat tabel penghubung — dalam kasus ini tabel "peminjaman".'},
+  {id:3,type:'multiple_choice',question:'Kolom "id_anggota" di tabel "peminjaman" yang merujuk ke kolom "id_anggota" di tabel "anggota" disebut?',
+   options:['Primary Key','Candidate Key','Foreign Key','Composite Key'],
+   correct:2,explanation:'Foreign Key adalah kolom yang merujuk ke Primary Key di tabel lain untuk membangun relasi antar tabel.'},
+  {id:4,type:'multiple_choice',question:'Atribut "Usia" yang nilainya dihitung dari "Tanggal Lahir" disebut atribut jenis apa?',
+   options:['Composite Attribute','Derived Attribute','Multi-value Attribute','Key Attribute'],
+   correct:1,explanation:'Derived Attribute nilainya diturunkan/dihitung dari atribut lain. Usia dihitung dari Tanggal Lahir menggunakan fungsi seperti DATEDIFF().'},
+  {id:5,type:'fill_sql',question:'Tulis klausa SQL untuk menghubungkan kolom id_buku di tabel peminjaman dengan id_buku di tabel buku:',
+   correct:'FOREIGN KEY (id_buku) REFERENCES buku(id_buku)',
+   alternatives:['foreign key (id_buku) references buku(id_buku)','FOREIGN KEY (id_buku) REFERENCES buku(id_buku);'],
+   explanation:'Sintaks FOREIGN KEY mendefinisikan kolom FK di tabel saat ini dan tabel mana serta kolom mana yang dirujuknya.'}
+];
+document.addEventListener('DOMContentLoaded',()=>Quiz.init(quizData,'bab2','quiz-container'));
+</script>
+</body>
+</html>

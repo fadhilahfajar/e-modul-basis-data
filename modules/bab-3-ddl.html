@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bab 3 — DDL: Mendefinisikan Struktur Database | E-Modul Basis Data</title>
+<link rel="stylesheet" href="../assets/css/custom.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script src="../assets/js/dark-mode.js"></script>
+</head>
+<body data-bab="bab3">
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<header class="header">
+  <button class="btn-icon hamburger-btn" id="hamburger-btn"><i class="fa-solid fa-bars"></i></button>
+  <a href="../index.html" class="header-logo">
+    <div class="header-logo-icon">🗄️</div>
+    <div><span class="header-logo-text">E-Modul Basis Data</span><span class="header-logo-sub">SMK PPLG · Kelas XI</span></div>
+  </a>
+  <div class="header-spacer"></div>
+  <nav class="header-nav">
+    <a href="../glossarium.html" class="btn-icon" title="Glossarium"><i class="fa-solid fa-book-open"></i></a>
+    <button class="btn-icon" id="dark-toggle"><i class="fa-solid fa-moon"></i></button>
+    <button class="btn-icon" id="btn-print" title="Cetak"><i class="fa-solid fa-print"></i></button>
+    <a href="../game/query-ninja.html" class="btn-game-nav"><i class="fa-solid fa-gamepad"></i> Query Ninja</a>
+  </nav>
+</header>
+
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main-content">
+<div class="content-wrapper">
+  <nav class="breadcrumb">
+    <a href="../index.html">Beranda</a><span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">Bab 3 — DDL: Mendefinisikan Struktur Database</span>
+  </nav>
+
+  <div class="bab-hero">
+    <div class="bab-num-badge"><i class="fa-solid fa-table-columns"></i> Bab 3 dari 7</div>
+    <h1 class="bab-title">DDL — Mendefinisikan Struktur Database</h1>
+    <div class="bab-meta">
+      <span class="bab-meta-item"><i class="fa-regular fa-clock"></i> <span id="read-time">⏱ memuat...</span></span>
+      <span class="bab-meta-item"><i class="fa-solid fa-signal"></i> Dasar–Menengah</span>
+      <span class="bab-meta-item"><i class="fa-solid fa-circle-question"></i> 5 soal quiz</span>
+    </div>
+    <div class="objectives-card">
+      <h4><i class="fa-solid fa-bullseye"></i> Tujuan Pembelajaran</h4>
+      <ul class="objectives-list">
+        <li>Membuat database dan tabel menggunakan perintah CREATE</li>
+        <li>Memilih tipe data MySQL yang tepat untuk setiap kolom</li>
+        <li>Menerapkan constraint (PRIMARY KEY, FOREIGN KEY, UNIQUE, NOT NULL, CHECK)</li>
+        <li>Memodifikasi struktur tabel dengan ALTER TABLE</li>
+        <li>Membedakan DROP TABLE dan TRUNCATE TABLE beserta risikonya</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <section>
+      <h2>DDL — Mendefinisikan Sebelum Mengisi</h2>
+      <p><strong>Data Definition Language (DDL)</strong> adalah subset perintah SQL yang digunakan untuk mendefinisikan, memodifikasi, dan menghapus <em>struktur</em> database — bukan isinya. Analogi terbaik: DDL adalah arsitek yang merancang gedung, sementara DML (Bab 4) adalah orang yang mengisi gedung itu dengan furnitur.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Perintah DDL</th><th>Fungsi</th></tr></thead>
+          <tbody>
+            <tr><td><code>CREATE</code></td><td>Membuat objek baru (database, tabel, view, index)</td></tr>
+            <tr><td><code>ALTER</code></td><td>Mengubah struktur objek yang sudah ada</td></tr>
+            <tr><td><code>DROP</code></td><td>Menghapus objek beserta seluruh isinya (permanen!)</td></tr>
+            <tr><td><code>TRUNCATE</code></td><td>Menghapus semua baris tabel, tapi struktur tetap ada</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>CREATE DATABASE &amp; CREATE TABLE</h2>
+      <div class="code-wrap">
+        <span class="code-label">SQL — Membuat Database &amp; Tabel</span>
+        <pre><code class="language-sql">-- 1. Buat database (IF NOT EXISTS = aman, tidak error jika sudah ada)
+CREATE DATABASE IF NOT EXISTS perpustakaan_smk;
+
+-- 2. Pilih database yang akan digunakan
+USE perpustakaan_smk;
+
+-- 3. Buat tabel anggota
+CREATE TABLE anggota (
+    id_anggota    INT AUTO_INCREMENT PRIMARY KEY,
+    nis           VARCHAR(10)  NOT NULL UNIQUE,
+    nama_lengkap  VARCHAR(100) NOT NULL,
+    kelas         VARCHAR(10)  NOT NULL,
+    email         VARCHAR(100),
+    tanggal_daftar DATE DEFAULT (CURRENT_DATE),
+    status        ENUM('aktif', 'nonaktif') DEFAULT 'aktif'
+);
+
+-- 4. Buat tabel buku
+CREATE TABLE buku (
+    id_buku      INT AUTO_INCREMENT PRIMARY KEY,
+    isbn         VARCHAR(20)  NOT NULL UNIQUE,
+    judul        VARCHAR(200) NOT NULL,
+    pengarang    VARCHAR(100) NOT NULL,
+    genre        VARCHAR(50),
+    stok         INT DEFAULT 1 CHECK (stok >= 0),
+    tahun_terbit YEAR
+);
+
+-- 5. Buat tabel peminjaman (harus dibuat SETELAH anggota & buku)
+CREATE TABLE peminjaman (
+    id_pinjam   INT AUTO_INCREMENT PRIMARY KEY,
+    id_anggota  INT NOT NULL,
+    id_buku     INT NOT NULL,
+    tgl_pinjam  DATE NOT NULL DEFAULT (CURRENT_DATE),
+    tgl_kembali DATE,
+    status      ENUM('dipinjam','dikembalikan','terlambat') DEFAULT 'dipinjam',
+    FOREIGN KEY (id_anggota) REFERENCES anggota(id_anggota) ON DELETE RESTRICT,
+    FOREIGN KEY (id_buku)    REFERENCES buku(id_buku) ON DELETE RESTRICT
+);</code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>Tipe Data MySQL — Panduan Memilih yang Tepat</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Kategori</th><th>Tipe Data</th><th>Kapasitas / Keterangan</th><th>Contoh Penggunaan</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="5"><strong>Numerik</strong></td><td><code>TINYINT</code></td><td>-128 sampai 127 (atau 0-255 UNSIGNED)</td><td>Status bool, kelas semester</td></tr>
+            <tr><td><code>INT</code></td><td>-2,1 miliar sampai 2,1 miliar</td><td>ID, stok, jumlah</td></tr>
+            <tr><td><code>BIGINT</code></td><td>±9,2 × 10¹⁸</td><td>ID skala besar, angka transaksi</td></tr>
+            <tr><td><code>DECIMAL(p,s)</code></td><td>p = total digit, s = desimal. Presisi eksak</td><td>Harga, nilai keuangan</td></tr>
+            <tr><td><code>FLOAT</code></td><td>Titik mengambang — bisa ada pembulatan kecil</td><td>Koordinat GPS, nilai ilmiah</td></tr>
+            <tr><td rowspan="4"><strong>Teks</strong></td><td><code>CHAR(n)</code></td><td>String panjang tetap, selalu n karakter</td><td>Kode negara (ID), kode pos</td></tr>
+            <tr><td><code>VARCHAR(n)</code></td><td>String variabel, maks n karakter. Efisien.</td><td>Nama, email, alamat</td></tr>
+            <tr><td><code>TEXT</code></td><td>Teks panjang tak terbatas (maks 65.535 byte)</td><td>Deskripsi buku, isi artikel</td></tr>
+            <tr><td><code>ENUM</code></td><td>Pilih dari daftar nilai yang sudah ditentukan</td><td>Status ('aktif','nonaktif'), gender</td></tr>
+            <tr><td rowspan="4"><strong>Tanggal</strong></td><td><code>DATE</code></td><td>Format YYYY-MM-DD</td><td>Tanggal lahir, tgl pinjam</td></tr>
+            <tr><td><code>DATETIME</code></td><td>Format YYYY-MM-DD HH:MM:SS</td><td>Timestamp login, waktu order</td></tr>
+            <tr><td><code>TIMESTAMP</code></td><td>Seperti DATETIME, otomatis update saat INSERT/UPDATE</td><td>created_at, updated_at</td></tr>
+            <tr><td><code>YEAR</code></td><td>Format YYYY (1901–2155)</td><td>Tahun terbit buku</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-box tip">
+        <span class="info-box-icon">💡</span>
+        <div class="info-box-content">
+          <strong>Aturan Emas Memilih Tipe Data</strong>
+          <p>Pilih tipe yang paling kecil yang cukup menampung data. <code>TINYINT</code> untuk angka 0-100, bukan <code>INT</code>. <code>VARCHAR(100)</code> untuk nama, bukan <code>TEXT</code>. Ini menghemat storage dan mempercepat query.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Constraint — Penjaga Integritas Data</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Constraint</th><th>Fungsi</th><th>Contoh</th></tr></thead>
+          <tbody>
+            <tr><td><code>PRIMARY KEY</code></td><td>Identifikasi unik setiap baris. Tidak bisa NULL, tidak bisa duplikat.</td><td><code>id_anggota INT PRIMARY KEY</code></td></tr>
+            <tr><td><code>FOREIGN KEY</code></td><td>Memastikan nilai merujuk ke PK yang valid di tabel lain.</td><td><code>FOREIGN KEY (id_buku) REFERENCES buku(id_buku)</code></td></tr>
+            <tr><td><code>UNIQUE</code></td><td>Nilai harus unik di seluruh kolom. Bisa NULL (berbeda dari PK).</td><td><code>nis VARCHAR(10) UNIQUE</code></td></tr>
+            <tr><td><code>NOT NULL</code></td><td>Kolom wajib terisi — tidak boleh kosong.</td><td><code>nama_lengkap VARCHAR(100) NOT NULL</code></td></tr>
+            <tr><td><code>DEFAULT</code></td><td>Nilai otomatis jika tidak diisi saat INSERT.</td><td><code>status ENUM(...) DEFAULT 'aktif'</code></td></tr>
+            <tr><td><code>AUTO_INCREMENT</code></td><td>Nilai integer bertambah otomatis untuk setiap baris baru.</td><td><code>id_buku INT AUTO_INCREMENT</code></td></tr>
+            <tr><td><code>CHECK</code></td><td>Validasi nilai berdasarkan kondisi yang ditentukan.</td><td><code>stok INT CHECK (stok &gt;= 0)</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>ALTER TABLE — Modifikasi Struktur</h2>
+      <p>Database jarang dirancang sempurna dari awal. <code>ALTER TABLE</code> digunakan untuk mengubah struktur tabel yang sudah ada tanpa menghapus datanya.</p>
+      <div class="code-wrap">
+        <span class="code-label">SQL — ALTER TABLE</span>
+        <pre><code class="language-sql">-- Tambah kolom baru
+ALTER TABLE anggota
+ADD COLUMN no_hp VARCHAR(15) AFTER email;
+
+-- Ubah tipe data atau constraint kolom
+ALTER TABLE anggota
+MODIFY COLUMN nama_lengkap VARCHAR(150) NOT NULL;
+
+-- Ganti nama kolom (MySQL 8.0+)
+ALTER TABLE buku
+RENAME COLUMN tahun_terbit TO tahun_publikasi;
+
+-- Hapus kolom (data di kolom itu ikut hilang!)
+ALTER TABLE anggota
+DROP COLUMN no_hp;
+
+-- Tambah constraint baru
+ALTER TABLE peminjaman
+ADD CONSTRAINT chk_tgl CHECK (tgl_kembali >= tgl_pinjam OR tgl_kembali IS NULL);</code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>DROP vs TRUNCATE — Perbedaan Kritis</h2>
+      <div class="info-box danger">
+        <span class="info-box-icon">🚨</span>
+        <div class="info-box-content">
+          <strong>Perintah Berbahaya — Tidak Bisa Dibatalkan!</strong>
+          <p>DROP dan TRUNCATE adalah perintah yang tidak bisa di-undo dengan ROLLBACK biasa. Selalu backup dulu sebelum menggunakan perintah ini di data produksi.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Aspek</th><th>DROP TABLE</th><th>TRUNCATE TABLE</th><th>DELETE (tanpa WHERE)</th></tr></thead>
+          <tbody>
+            <tr><td>Menghapus struktur?</td><td>✅ Ya — tabel hilang</td><td>❌ Tidak — struktur tetap</td><td>❌ Tidak</td></tr>
+            <tr><td>Menghapus data?</td><td>✅ Ya — semua data</td><td>✅ Ya — semua baris</td><td>✅ Ya — semua baris</td></tr>
+            <tr><td>Auto-increment reset?</td><td>Ya (tabel hilang)</td><td>✅ Ya — mulai dari 1 lagi</td><td>❌ Tidak</td></tr>
+            <tr><td>Bisa di-rollback?</td><td>❌ Tidak</td><td>❌ Tidak</td><td>✅ Ya (dalam transaksi)</td></tr>
+            <tr><td>Kecepatan</td><td>Sangat cepat</td><td>Sangat cepat</td><td>Lambat (log per baris)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code-wrap">
+        <span class="code-label">SQL — DROP dan TRUNCATE</span>
+        <pre><code class="language-sql">-- Hapus tabel beserta strukturnya (irreversible!)
+DROP TABLE IF EXISTS peminjaman;
+-- Catatan: hapus tabel yang punya FK dulu sebelum tabel yang dirujuk
+
+-- Hapus semua data, tapi struktur tetap ada
+TRUNCATE TABLE peminjaman;
+-- AUTO_INCREMENT kembali ke 1
+
+-- Hapus database seluruhnya (SANGAT BERBAHAYA)
+DROP DATABASE IF EXISTS perpustakaan_smk;</code></pre>
+      </div>
+    </section>
+
+    <!-- VIDEO -->
+    <div class="video-section">
+      <div class="video-section-title"><i class="fa-brands fa-youtube" style="color:#ef4444"></i> Video Pembelajaran</div>
+      <div class="video-wrapper" data-video-url="https://www.youtube.com/results?search_query=tutorial+DDL+MySQL+CREATE+TABLE+bahasa+indonesia">
+        <iframe src="https://www.youtube.com/embed/HXV3zeQKqGY"
+                title="DDL MySQL - CREATE TABLE, ALTER TABLE, DROP TABLE"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <section>
+      <h2><i class="fa-solid fa-link" style="color:var(--c-primary-light);font-size:.9em"></i> Sumber Belajar</h2>
+      <div class="ref-grid">
+        <div class="ref-card"><div class="ref-card-icon">🐬</div><div class="ref-card-name">MySQL DDL Docs</div><div class="ref-card-desc">Referensi lengkap perintah DDL MySQL — CREATE, ALTER, DROP dengan semua opsi.</div><a href="https://dev.mysql.com/doc/refman/8.0/en/sql-data-definition-statements.html" target="_blank" rel="noopener" class="ref-card-link">Buka <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+        <div class="ref-card"><div class="ref-card-icon">🌐</div><div class="ref-card-name">W3Schools SQL CREATE</div><div class="ref-card-desc">Tutorial CREATE TABLE dengan contoh interaktif dan Try-it editor.</div><a href="https://www.w3schools.com/sql/sql_create_table.asp" target="_blank" rel="noopener" class="ref-card-link">Buka <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+      </div>
+    </section>
+
+    <div class="quiz-section">
+      <div class="quiz-header">
+        <h3><i class="fa-solid fa-circle-question"></i> Quiz Bab 3</h3>
+        <p style="font-size:.82rem;color:var(--c-text-muted);margin:.2rem 0 0">Uji pemahamanmu tentang DDL sebelum ke Bab 4.</p>
+        <div class="quiz-progress-bar-wrap"><div class="quiz-progress-bar-fill" style="width:0%"></div></div>
+      </div>
+      <div id="quiz-container"></div>
+    </div>
+
+    <button class="btn-mark-done" id="btn-mark-done" data-bab="bab3">
+      <i class="fa-solid fa-check-circle"></i> Tandai Bab Ini Selesai
+    </button>
+
+    <nav class="bab-nav">
+      <a href="bab-2-erd-perancangan.html" class="bab-nav-btn">
+        <i class="fa-solid fa-chevron-left" style="color:var(--c-text-muted)"></i>
+        <div><span class="bab-nav-label">Bab Sebelumnya</span><span class="bab-nav-title">← ERD &amp; Perancangan</span></div>
+      </a>
+      <a href="bab-4-dml.html" class="bab-nav-btn next">
+        <div><span class="bab-nav-label">Bab Berikutnya</span><span class="bab-nav-title">DML — Manipulasi Data →</span></div>
+        <i class="fa-solid fa-chevron-right" style="color:var(--c-text-muted)"></i>
+      </a>
+    </nav>
+  </div>
+</div>
+<footer class="footer">E-Modul Basis Data · SMK PPLG · Kelas XI · Bab 3 dari 7</footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+<script src="../assets/js/progress.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script src="../assets/js/sidebar-template.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/print.js"></script>
+<script>
+const quizData = [
+  {id:1,type:'multiple_choice',question:'Perintah DDL mana yang digunakan untuk MENGUBAH struktur tabel yang sudah ada?',
+   options:['CREATE TABLE','DROP TABLE','ALTER TABLE','TRUNCATE TABLE'],
+   correct:2,explanation:'ALTER TABLE digunakan untuk memodifikasi struktur tabel yang ada — menambah kolom (ADD COLUMN), mengubah tipe (MODIFY COLUMN), atau menghapus kolom (DROP COLUMN).'},
+  {id:2,type:'multiple_choice',question:'Kamu perlu kolom untuk menyimpan harga produk dengan nilai seperti 15000.50. Tipe data mana yang paling tepat?',
+   options:['INT','FLOAT','DECIMAL(10,2)','VARCHAR(20)'],
+   correct:2,explanation:'DECIMAL(10,2) tepat untuk nilai keuangan karena presisi eksak. FLOAT bisa menghasilkan error pembulatan kecil yang berbahaya untuk data keuangan.'},
+  {id:3,type:'multiple_choice',question:'Apa perbedaan utama antara TRUNCATE TABLE dan DELETE (tanpa WHERE)?',
+   options:['Tidak ada perbedaan, keduanya sama','TRUNCATE lebih lambat dari DELETE','TRUNCATE tidak bisa di-rollback dan mereset AUTO_INCREMENT; DELETE bisa di-rollback','DELETE menghapus struktur tabel, TRUNCATE tidak'],
+   correct:2,explanation:'TRUNCATE adalah operasi DDL yang tidak bisa di-rollback dalam transaksi biasa dan mereset AUTO_INCREMENT ke 1. DELETE adalah operasi DML yang bisa di-rollback dan tidak mereset counter.'},
+  {id:4,type:'multiple_choice',question:'Constraint mana yang memastikan kolom tidak boleh berisi nilai yang sama dua kali, tapi masih boleh NULL?',
+   options:['NOT NULL','PRIMARY KEY','UNIQUE','CHECK'],
+   correct:2,explanation:'UNIQUE memastikan semua nilai dalam kolom berbeda, tapi masih mengizinkan NULL (berbeda dari PRIMARY KEY yang tidak boleh NULL sama sekali).'},
+  {id:5,type:'fill_sql',question:'Tulis perintah untuk menambahkan kolom "no_hp" bertipe VARCHAR(15) ke tabel anggota:',
+   correct:'ALTER TABLE anggota ADD COLUMN no_hp VARCHAR(15)',
+   alternatives:['alter table anggota add column no_hp varchar(15)','ALTER TABLE anggota ADD no_hp VARCHAR(15)','ALTER TABLE anggota ADD COLUMN no_hp VARCHAR(15);'],
+   explanation:'Sintaks ALTER TABLE ... ADD COLUMN digunakan untuk menambahkan kolom baru. Kata kunci COLUMN bersifat opsional di MySQL tapi disarankan untuk keterbacaan.'}
+];
+document.addEventListener('DOMContentLoaded',()=>Quiz.init(quizData,'bab3','quiz-container'));
+</script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bab 7 — Objek Database Lanjutan | E-Modul Basis Data</title>
+<link rel="stylesheet" href="../assets/css/custom.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script src="../assets/js/dark-mode.js"></script>
+</head>
+<body data-bab="bab7">
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<header class="header">
+  <button class="btn-icon hamburger-btn" id="hamburger-btn"><i class="fa-solid fa-bars"></i></button>
+  <a href="../index.html" class="header-logo">
+    <div class="header-logo-icon">🗄️</div>
+    <div><span class="header-logo-text">E-Modul Basis Data</span><span class="header-logo-sub">SMK PPLG · Kelas XI</span></div>
+  </a>
+  <div class="header-spacer"></div>
+  <nav class="header-nav">
+    <a href="../glossarium.html" class="btn-icon"><i class="fa-solid fa-book-open"></i></a>
+    <button class="btn-icon" id="dark-toggle"><i class="fa-solid fa-moon"></i></button>
+    <button class="btn-icon" id="btn-print"><i class="fa-solid fa-print"></i></button>
+    <a href="../game/query-ninja.html" class="btn-game-nav"><i class="fa-solid fa-gamepad"></i> Query Ninja</a>
+  </nav>
+</header>
+<aside class="sidebar" id="sidebar"></aside>
+<main class="main-content">
+<div class="content-wrapper">
+  <nav class="breadcrumb">
+    <a href="../index.html">Beranda</a><span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">Bab 7 — Objek Database Lanjutan</span>
+  </nav>
+  <div class="bab-hero">
+    <div class="bab-num-badge"><i class="fa-solid fa-gears"></i> Bab 7 dari 7</div>
+    <h1 class="bab-title">Objek Database Lanjutan</h1>
+    <div class="bab-meta">
+      <span class="bab-meta-item"><i class="fa-regular fa-clock"></i> <span id="read-time">⏱ memuat...</span></span>
+      <span class="bab-meta-item"><i class="fa-solid fa-signal"></i> Lanjutan</span>
+      <span class="bab-meta-item"><i class="fa-solid fa-circle-question"></i> 5 soal quiz</span>
+    </div>
+    <div class="objectives-card">
+      <h4><i class="fa-solid fa-bullseye"></i> Tujuan Pembelajaran</h4>
+      <ul class="objectives-list">
+        <li>Membuat dan menggunakan VIEW untuk menyederhanakan query kompleks</li>
+        <li>Membuat Stored Procedure dengan parameter IN/OUT dan memanggil dengan CALL</li>
+        <li>Membuat Trigger BEFORE/AFTER untuk mengotomasi operasi database</li>
+        <li>Menjelaskan konsep transaksi dan sifat ACID</li>
+        <li>Menggunakan COMMIT, ROLLBACK, dan SAVEPOINT dalam transaksi</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <section>
+      <h2>VIEW — Tabel Virtual yang Menyederhanakan Segalanya</h2>
+      <p>VIEW adalah query SELECT yang disimpan dengan nama tertentu di database. Setelah dibuat, kita bisa menggunakannya seperti tabel biasa — padahal di balik layar, MySQL menjalankan query aslinya secara otomatis.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Manfaat VIEW</th><th>Contoh Kasus</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Menyederhanakan query</strong></td><td>Query JOIN 3 tabel yang dipakai berkali-kali → buat jadi satu VIEW</td></tr>
+            <tr><td><strong>Keamanan data</strong></td><td>Tampilkan hanya kolom tertentu ke user — sembunyikan kolom sensitif (password, gaji)</td></tr>
+            <tr><td><strong>Konsistensi</strong></td><td>Logika bisnis terpusat di satu tempat — tidak perlu ditulis ulang di setiap query</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code-wrap">
+        <span class="code-label">SQL — CREATE VIEW</span>
+        <pre><code class="language-sql">-- Buat VIEW laporan peminjaman aktif
+CREATE OR REPLACE VIEW v_peminjaman_aktif AS
+SELECT
+    p.id_pinjam,
+    a.nama_lengkap                            AS peminjam,
+    a.kelas,
+    b.judul                                   AS judul_buku,
+    b.genre,
+    p.tgl_pinjam,
+    DATEDIFF(CURRENT_DATE, p.tgl_pinjam)      AS hari_pinjam,
+    CASE
+        WHEN DATEDIFF(CURRENT_DATE, p.tgl_pinjam) > 7 THEN 'TERLAMBAT'
+        ELSE 'Tepat Waktu'
+    END AS keterlambatan
+FROM peminjaman p
+JOIN anggota a ON p.id_anggota = a.id_anggota
+JOIN buku    b ON p.id_buku    = b.id_buku
+WHERE p.status = 'dipinjam';
+
+-- Gunakan VIEW seperti tabel biasa
+SELECT * FROM v_peminjaman_aktif WHERE keterlambatan = 'TERLAMBAT';
+SELECT peminjam, COUNT(*) AS total FROM v_peminjaman_aktif GROUP BY peminjam;
+
+-- Hapus VIEW
+DROP VIEW IF EXISTS v_peminjaman_aktif;</code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>Stored Procedure — Logika Bisnis di Dalam Database</h2>
+      <p><strong>Stored Procedure</strong> adalah blok kode SQL yang tersimpan di database dan bisa dipanggil berulang kali. Seperti fungsi/method di bahasa pemrograman, tapi berjalan di sisi database.</p>
+      <div class="code-wrap">
+        <span class="code-label">SQL — Stored Procedure</span>
+        <pre><code class="language-sql">-- WAJIB ganti delimiter sebelum membuat procedure
+DELIMITER //
+
+CREATE PROCEDURE proc_pinjam_buku(
+    IN  p_id_anggota INT,
+    IN  p_id_buku    INT,
+    OUT p_pesan      VARCHAR(100)
+)
+BEGIN
+    DECLARE v_stok INT;
+    DECLARE v_status VARCHAR(20);
+
+    -- Cek stok buku
+    SELECT stok INTO v_stok FROM buku WHERE id_buku = p_id_buku;
+
+    -- Cek status anggota
+    SELECT status INTO v_status FROM anggota WHERE id_anggota = p_id_anggota;
+
+    IF v_stok IS NULL THEN
+        SET p_pesan = 'ERROR: Buku tidak ditemukan';
+    ELSEIF v_stok <= 0 THEN
+        SET p_pesan = 'ERROR: Stok buku habis';
+    ELSEIF v_status != 'aktif' THEN
+        SET p_pesan = 'ERROR: Anggota tidak aktif';
+    ELSE
+        -- Catat peminjaman
+        INSERT INTO peminjaman (id_anggota, id_buku, tgl_pinjam, status)
+        VALUES (p_id_anggota, p_id_buku, CURRENT_DATE, 'dipinjam');
+
+        -- Kurangi stok
+        UPDATE buku SET stok = stok - 1 WHERE id_buku = p_id_buku;
+
+        SET p_pesan = 'SUKSES: Peminjaman berhasil dicatat';
+    END IF;
+END//
+
+DELIMITER ;
+
+-- Memanggil procedure
+CALL proc_pinjam_buku(1, 3, @hasil);
+SELECT @hasil;  -- tampilkan output parameter</code></pre>
+      </div>
+      <div class="info-box tip">
+        <span class="info-box-icon">💡</span>
+        <div class="info-box-content">
+          <strong>Kenapa Perlu DELIMITER?</strong>
+          <p>MySQL menggunakan titik koma (;) sebagai penanda akhir perintah. Di dalam procedure, kita juga pakai titik koma untuk setiap statement — ini akan membingungkan parser. Solusinya: ganti delimiter sementara jadi <code>//</code>, tulis procedure, lalu kembalikan ke <code>;</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>TRIGGER — Otomasi yang Berjalan Sendiri</h2>
+      <p><strong>Trigger</strong> adalah kode yang otomatis dieksekusi ketika terjadi operasi INSERT, UPDATE, atau DELETE pada tabel tertentu. Tidak perlu dipanggil manual — database menjalankannya sendiri.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Timing</th><th>Event</th><th>Kasus Penggunaan</th></tr></thead>
+          <tbody>
+            <tr><td>BEFORE INSERT</td><td>INSERT</td><td>Validasi data sebelum masuk ke tabel</td></tr>
+            <tr><td>AFTER INSERT</td><td>INSERT</td><td>Update tabel lain setelah data baru masuk</td></tr>
+            <tr><td>BEFORE UPDATE</td><td>UPDATE</td><td>Cek aturan bisnis sebelum data diubah</td></tr>
+            <tr><td>AFTER UPDATE</td><td>UPDATE</td><td>Catat ke log, update summary table</td></tr>
+            <tr><td>BEFORE DELETE</td><td>DELETE</td><td>Cegah penghapusan data penting</td></tr>
+            <tr><td>AFTER DELETE</td><td>DELETE</td><td>Bersihkan data terkait di tabel lain</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code-wrap">
+        <span class="code-label">SQL — TRIGGER</span>
+        <pre><code class="language-sql">DELIMITER //
+
+-- AFTER INSERT: kurangi stok saat peminjaman baru dibuat
+CREATE TRIGGER trg_kurangi_stok
+AFTER INSERT ON peminjaman
+FOR EACH ROW
+BEGIN
+    UPDATE buku SET stok = stok - 1
+    WHERE id_buku = NEW.id_buku;
+    -- NEW = baris yang baru saja diinsert
+END//
+
+-- AFTER UPDATE: tambah stok saat buku dikembalikan
+CREATE TRIGGER trg_kembalikan_stok
+AFTER UPDATE ON peminjaman
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'dikembalikan' AND OLD.status = 'dipinjam' THEN
+        UPDATE buku SET stok = stok + 1
+        WHERE id_buku = NEW.id_buku;
+        -- OLD = nilai sebelum diupdate, NEW = nilai setelah diupdate
+    END IF;
+END//
+
+DELIMITER ;</code></pre>
+      </div>
+      <div class="info-box warn">
+        <span class="info-box-icon">⚠️</span>
+        <div class="info-box-content">
+          <strong>Gunakan Trigger dengan Bijak</strong>
+          <p>Trigger berjalan otomatis dan tidak terlihat di query — ini bisa menyulitkan debugging jika terlalu banyak trigger. Gunakan hanya untuk logika yang memang harus selalu berjalan, seperti audit log atau update stok.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Transaksi &amp; Sifat ACID</h2>
+      <p>Bayangkan proses peminjaman buku: kita harus INSERT ke tabel peminjaman DAN UPDATE stok buku. Jika koneksi putus di tengah jalan, kita bisa punya catatan peminjaman tanpa stok berkurang — data inkonsisten. <strong>Transaksi</strong> mencegah ini terjadi.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Sifat ACID</th><th>Arti</th><th>Jaminan</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Atomicity</strong></td><td>Semua atau tidak sama sekali</td><td>INSERT + UPDATE keduanya berhasil, atau keduanya dibatalkan</td></tr>
+            <tr><td><strong>Consistency</strong></td><td>Data selalu valid</td><td>Constraint dan aturan bisnis terpenuhi setelah transaksi</td></tr>
+            <tr><td><strong>Isolation</strong></td><td>Transaksi tidak saling mengganggu</td><td>Dua transaksi bersamaan tidak merusak satu sama lain</td></tr>
+            <tr><td><strong>Durability</strong></td><td>Perubahan yang COMMIT bersifat permanen</td><td>Data tidak hilang meskipun server crash setelah COMMIT</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code-wrap">
+        <span class="code-label">SQL — Transaksi</span>
+        <pre><code class="language-sql">START TRANSACTION;
+
+    -- Langkah 1: catat peminjaman
+    INSERT INTO peminjaman (id_anggota, id_buku, tgl_pinjam, status)
+    VALUES (1, 3, CURRENT_DATE, 'dipinjam');
+
+    -- Langkah 2: kurangi stok
+    UPDATE buku SET stok = stok - 1 WHERE id_buku = 3;
+
+    -- Cek apakah stok menjadi negatif
+    -- Jika ada masalah: ROLLBACK; (batalkan semua)
+    -- Jika semua baik: COMMIT; (simpan permanen)
+
+COMMIT;
+
+-- Contoh dengan ROLLBACK:
+START TRANSACTION;
+    UPDATE buku SET stok = stok - 1 WHERE id_buku = 5;
+    -- Ternyata stok sudah 0 sebelumnya! Batalkan:
+ROLLBACK;  -- stok kembali seperti semula
+
+-- SAVEPOINT: titik simpan di tengah transaksi
+START TRANSACTION;
+    INSERT INTO log_aktivitas (aksi) VALUES ('mulai proses');
+    SAVEPOINT sp1;
+
+    UPDATE buku SET stok = stok - 1 WHERE id_buku = 2;
+    -- Jika update ini bermasalah:
+    ROLLBACK TO sp1;  -- kembali ke SAVEPOINT, INSERT log tetap ada
+
+COMMIT;</code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>INDEX — Mempercepat Pencarian Data</h2>
+      <p><strong>INDEX</strong> bekerja seperti indeks buku — tanpanya, MySQL harus membaca setiap baris untuk menemukan data (full table scan). Dengan index, pencarian bisa ribuan kali lebih cepat pada tabel besar.</p>
+      <div class="code-wrap">
+        <span class="code-label">SQL — INDEX</span>
+        <pre><code class="language-sql">-- Buat index pada kolom yang sering digunakan di WHERE atau JOIN
+CREATE INDEX idx_buku_genre ON buku(genre);
+CREATE INDEX idx_pinjam_status ON peminjaman(status, tgl_pinjam);
+
+-- Lihat index yang ada di sebuah tabel
+SHOW INDEX FROM peminjaman;
+
+-- Hapus index (PK dan UNIQUE sudah otomatis punya index)
+DROP INDEX idx_buku_genre ON buku;
+
+-- Kapan PERLU index? → Kolom yang sering di WHERE, JOIN ON, ORDER BY
+-- Kapan TIDAK perlu? → Tabel kecil, kolom dengan sedikit nilai unik (ENUM status)</code></pre>
+      </div>
+    </section>
+
+    <div class="video-section">
+      <div class="video-section-title"><i class="fa-brands fa-youtube" style="color:#ef4444"></i> Video Pembelajaran</div>
+      <div class="video-wrapper">
+        <iframe src="https://www.youtube.com/embed/OqjGsWtBmYQ"
+                title="Stored Procedure dan Trigger MySQL — Tutorial Bahasa Indonesia"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <section>
+      <h2><i class="fa-solid fa-link" style="color:var(--c-primary-light);font-size:.9em"></i> Sumber Belajar</h2>
+      <div class="ref-grid">
+        <div class="ref-card"><div class="ref-card-icon">🐬</div><div class="ref-card-name">MySQL Stored Programs</div><div class="ref-card-desc">Dokumentasi lengkap Stored Procedure, Function, dan Trigger di MySQL 8.x.</div><a href="https://dev.mysql.com/doc/refman/8.0/en/stored-programs-defining.html" target="_blank" rel="noopener" class="ref-card-link">Buka <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+        <div class="ref-card"><div class="ref-card-icon">🌐</div><div class="ref-card-name">W3Schools SQL Views</div><div class="ref-card-desc">Tutorial VIEW dengan contoh praktis dan Try-it editor interaktif.</div><a href="https://www.w3schools.com/sql/sql_view.asp" target="_blank" rel="noopener" class="ref-card-link">Buka <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+        <div class="ref-card"><div class="ref-card-icon">📘</div><div class="ref-card-name">MariaDB Tutorial</div><div class="ref-card-desc">Tutorial Trigger dan Transaksi yang sangat detail dengan banyak contoh kasus.</div><a href="https://www.mariadbtutorial.com/mariadb-triggers/" target="_blank" rel="noopener" class="ref-card-link">Buka <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+      </div>
+    </section>
+
+    <div class="quiz-section">
+      <div class="quiz-header">
+        <h3><i class="fa-solid fa-circle-question"></i> Quiz Bab 7 — Bab Terakhir!</h3>
+        <div class="quiz-progress-bar-wrap"><div class="quiz-progress-bar-fill" style="width:0%"></div></div>
+      </div>
+      <div id="quiz-container"></div>
+    </div>
+
+    <button class="btn-mark-done" id="btn-mark-done" data-bab="bab7">
+      <i class="fa-solid fa-check-circle"></i> Tandai Bab Ini Selesai — Selesai! 🎉
+    </button>
+
+    <nav class="bab-nav">
+      <a href="bab-6-join-subquery.html" class="bab-nav-btn">
+        <i class="fa-solid fa-chevron-left" style="color:var(--c-text-muted)"></i>
+        <div><span class="bab-nav-label">Bab Sebelumnya</span><span class="bab-nav-title">← JOIN &amp; Subquery</span></div>
+      </a>
+      <a href="../game/query-ninja.html" class="bab-nav-btn next">
+        <div><span class="bab-nav-label">Tantangan Selanjutnya</span><span class="bab-nav-title">🥷 Main Query Ninja →</span></div>
+        <i class="fa-solid fa-gamepad" style="color:var(--c-text-muted)"></i>
+      </a>
+    </nav>
+  </div>
+</div>
+<footer class="footer">E-Modul Basis Data · SMK PPLG · Kelas XI · Bab 7 dari 7 · Selesai! 🎉</footer>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+<script src="../assets/js/progress.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script src="../assets/js/sidebar-template.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/print.js"></script>
+<script>
+const quizData = [
+  {id:1,type:'multiple_choice',question:'Apa perbedaan utama antara VIEW dan tabel biasa?',
+   options:['VIEW lebih cepat dari tabel biasa','VIEW menyimpan data secara fisik seperti tabel','VIEW adalah query yang tersimpan — datanya diambil real-time dari tabel asli saat dipanggil','VIEW tidak bisa digunakan di klausa WHERE'],
+   correct:2,explanation:'VIEW adalah tabel virtual — tidak menyimpan data secara fisik. Saat kamu SELECT dari VIEW, MySQL menjalankan query asli VIEW tersebut dan mengembalikan hasilnya secara dinamis.'},
+  {id:2,type:'multiple_choice',question:'Dalam Stored Procedure, parameter jenis apa yang digunakan untuk mengembalikan nilai ke pemanggil?',
+   options:['IN','OUT','INOUT','RETURN'],
+   correct:1,explanation:'Parameter OUT digunakan untuk mengembalikan nilai dari procedure ke pemanggil. Berbeda dengan fungsi, procedure menggunakan parameter OUT bukan RETURN untuk mengembalikan hasil.'},
+  {id:3,type:'multiple_choice',question:'Trigger AFTER INSERT pada tabel peminjaman akan berjalan...?',
+   options:['Sebelum baris baru dimasukkan ke peminjaman','Tepat ketika baris baru berhasil dimasukkan ke peminjaman','Setiap kali ada SELECT pada tabel peminjaman','Hanya jika trigger dipanggil manual dengan CALL'],
+   correct:1,explanation:'AFTER INSERT berjalan secara otomatis setelah baris baru berhasil dimasukkan ke tabel. Kita bisa mengakses data baris baru tersebut menggunakan kata kunci NEW.'},
+  {id:4,type:'multiple_choice',question:'Apa yang dimaksud dengan sifat "Atomicity" dalam transaksi ACID?',
+   options:['Transaksi berjalan sangat cepat seperti atom','Semua operasi dalam transaksi berhasil semua, atau jika ada yang gagal semuanya dibatalkan','Transaksi tidak bisa dibagi menjadi bagian lebih kecil','Data tidak bisa diubah setelah COMMIT'],
+   correct:1,explanation:'Atomicity menjamin transaksi adalah satu unit tak terpisahkan. Jika ada satu operasi yang gagal, seluruh transaksi dibatalkan (ROLLBACK) — tidak ada keadaan setengah jadi.'},
+  {id:5,type:'fill_sql',question:'Tulis perintah SQL untuk membatalkan semua perubahan dalam transaksi yang sedang berjalan:',
+   correct:'ROLLBACK',
+   alternatives:['rollback','ROLLBACK;','rollback;'],
+   explanation:'ROLLBACK membatalkan semua perubahan yang dibuat sejak START TRANSACTION terakhir. Semua data kembali ke kondisi sebelum transaksi dimulai.'}
+];
+document.addEventListener('DOMContentLoaded',()=>Quiz.init(quizData,'bab7','quiz-container'));
+</script>
+</body>
+</html>

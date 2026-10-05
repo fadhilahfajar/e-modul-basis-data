@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bab 5 — Normalisasi Database | E-Modul Basis Data</title>
+<link rel="stylesheet" href="../assets/css/custom.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script src="../assets/js/dark-mode.js"></script>
+<style>
+.norm-table-wrap{overflow-x:auto;margin:1rem 0}
+.norm-table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:520px}
+.norm-table th{padding:.5rem .75rem;text-align:left;font-family:'Space Grotesk',sans-serif;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+.norm-table td{padding:.45rem .75rem;border-bottom:1px solid var(--c-border)}
+.norm-table tr:last-child td{border-bottom:none}
+.norm-bad th{background:rgba(220,38,38,.12);color:#f87171}
+.norm-bad td{background:rgba(220,38,38,.04);color:var(--c-text-2)}
+.norm-good th{background:rgba(21,128,61,.12);color:#4ade80}
+.norm-good td{background:rgba(21,128,61,.04);color:var(--c-text-2)}
+.norm-neutral th{background:rgba(59,130,246,.1);color:#93c5fd}
+.norm-neutral td{background:rgba(59,130,246,.03);color:var(--c-text-2)}
+.arrow-row{display:flex;align-items:center;gap:.75rem;margin:.75rem 0;font-size:.82rem;color:var(--c-text-muted)}
+.arrow-row .arrow{font-size:1.25rem;color:var(--c-accent)}
+.norm-stage-label{display:inline-block;padding:.2rem .7rem;border-radius:99px;font-size:.72rem;font-weight:700;font-family:'Space Grotesk',sans-serif;margin-bottom:.5rem}
+.stage-0nf{background:rgba(220,38,38,.15);color:#f87171}
+.stage-1nf{background:rgba(245,158,11,.15);color:#fcd34d}
+.stage-2nf{background:rgba(59,130,246,.15);color:#93c5fd}
+.stage-3nf{background:rgba(21,128,61,.15);color:#4ade80}
+</style>
+</head>
+<body data-bab="bab5">
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<header class="header">
+  <button class="btn-icon hamburger-btn" id="hamburger-btn"><i class="fa-solid fa-bars"></i></button>
+  <a href="../index.html" class="header-logo">
+    <div class="header-logo-icon">🗄️</div>
+    <div><span class="header-logo-text">E-Modul Basis Data</span><span class="header-logo-sub">SMK PPLG · Kelas XI</span></div>
+  </a>
+  <div class="header-spacer"></div>
+  <nav class="header-nav">
+    <a href="../glossarium.html" class="btn-icon"><i class="fa-solid fa-book-open"></i></a>
+    <button class="btn-icon" id="dark-toggle"><i class="fa-solid fa-moon"></i></button>
+    <button class="btn-icon" id="btn-print"><i class="fa-solid fa-print"></i></button>
+    <a href="../game/query-ninja.html" class="btn-game-nav"><i class="fa-solid fa-gamepad"></i> Query Ninja</a>
+  </nav>
+</header>
+<aside class="sidebar" id="sidebar"></aside>
+<main class="main-content">
+<div class="content-wrapper">
+  <nav class="breadcrumb">
+    <a href="../index.html">Beranda</a><span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">Bab 5 — Normalisasi Database</span>
+  </nav>
+  <div class="bab-hero">
+    <div class="bab-num-badge"><i class="fa-solid fa-layer-group"></i> Bab 5 dari 7</div>
+    <h1 class="bab-title">Normalisasi Database</h1>
+    <div class="bab-meta">
+      <span class="bab-meta-item"><i class="fa-regular fa-clock"></i> <span id="read-time">⏱ memuat...</span></span>
+      <span class="bab-meta-item"><i class="fa-solid fa-signal"></i> Menengah</span>
+      <span class="bab-meta-item"><i class="fa-solid fa-circle-question"></i> 5 soal quiz</span>
+    </div>
+    <div class="objectives-card">
+      <h4><i class="fa-solid fa-bullseye"></i> Tujuan Pembelajaran</h4>
+      <ul class="objectives-list">
+        <li>Mengidentifikasi anomali INSERT, UPDATE, dan DELETE pada tabel tidak normal</li>
+        <li>Memahami konsep Ketergantungan Fungsional (Functional Dependency)</li>
+        <li>Menerapkan 1NF: menghilangkan atribut tidak atomik dan repeating group</li>
+        <li>Menerapkan 2NF: menghilangkan partial dependency</li>
+        <li>Menerapkan 3NF: menghilangkan transitive dependency</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <section>
+      <h2>Masalah Tanpa Normalisasi</h2>
+      <p>Bayangkan kita menyimpan data peminjaman buku dalam satu tabel besar — terasa praktis, tapi menyimpan bom waktu. Tiga jenis anomali menunggu:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Jenis Anomali</th><th>Skenario</th><th>Dampak</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Anomali INSERT</strong></td><td>Ingin menambah buku baru yang belum pernah dipinjam</td><td>Tidak bisa — kolom id_anggota wajib diisi (NOT NULL)</td></tr>
+            <tr><td><strong>Anomali UPDATE</strong></td><td>Pengarang buku "A" berganti nama</td><td>Harus update ratusan baris yang meminjam buku yang sama — rawan inkonsistensi</td></tr>
+            <tr><td><strong>Anomali DELETE</strong></td><td>Hapus catatan peminjaman terakhir sebuah buku</td><td>Data buku ikut terhapus secara tidak sengaja</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Ketergantungan Fungsional</h2>
+      <p>Sebelum normalisasi, kita perlu memahami <strong>Ketergantungan Fungsional (Functional Dependency)</strong> — konsep inti yang menentukan apakah sebuah tabel perlu dipecah.</p>
+      <p>Notasi: <strong>A → B</strong> artinya "nilai A secara unik menentukan nilai B". Jika kita tahu nilai A, kita tahu persis nilai B-nya.</p>
+      <div class="code-wrap">
+        <span class="code-label">Contoh Functional Dependency</span>
+        <pre><code class="language-sql">-- id_anggota → nama_lengkap, kelas  (PK menentukan semua atribut lain di tabelnya)
+-- isbn → judul, pengarang, genre    (ISBN unik, menentukan info buku)
+-- id_pinjam → tgl_pinjam, status   (setiap peminjaman punya tanggal & status sendiri)
+
+-- Transitive (berbahaya, dilanggar di 3NF):
+-- id_pinjam → id_buku → judul       (judul bergantung pada id_buku, bukan langsung ke PK)</code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>Studi Kasus Normalisasi — 0NF sampai 3NF</h2>
+      <p>Kita mulai dari tabel paling "naif" — semua data dalam satu tabel — lalu normalisasi bertahap.</p>
+
+      <!-- 0NF -->
+      <div class="norm-stage-label stage-0nf">0NF — Tabel Awal (Belum Normal)</div>
+      <p style="font-size:.83rem;color:var(--c-text-muted);margin-bottom:.5rem">Semua data disatukan. Ada kolom multi-value dan data berulang.</p>
+      <div class="norm-table-wrap">
+        <table class="norm-table norm-bad">
+          <thead><tr><th>id_pinjam</th><th>nis</th><th>nama_siswa</th><th>kelas</th><th>buku_dipinjam (multi!)</th><th>pengarang</th><th>genre</th><th>tgl_pinjam</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>2024001</td><td>Andi Pratama</td><td>XI PPLG 1</td><td>Basis Data, Web Dasar</td><td>Ahmad S, Budi R</td><td>Teknologi</td><td>2024-01-10</td></tr>
+            <tr><td>2</td><td>2024002</td><td>Budi Santoso</td><td>XI PPLG 2</td><td>Laskar Pelangi</td><td>Andrea Hirata</td><td>Novel</td><td>2024-01-12</td></tr>
+            <tr><td>3</td><td>2024001</td><td>Andi Pratama</td><td>XI PPLG 1</td><td>Algoritma</td><td>Catur Wahyu</td><td>Teknologi</td><td>2024-01-20</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:.8rem;color:#f87171">❌ Masalah: kolom "buku_dipinjam" bisa berisi lebih dari satu nilai. Nama Andi duplikat di baris 1 dan 3.</p>
+
+      <div class="arrow-row"><span class="arrow">↓</span><span>Terapkan <strong>1NF</strong>: setiap sel harus atomik (satu nilai), satu primary key</span></div>
+
+      <!-- 1NF -->
+      <div class="norm-stage-label stage-1nf">1NF — Bentuk Normal Pertama</div>
+      <div class="norm-table-wrap">
+        <table class="norm-table norm-neutral">
+          <thead><tr><th>id_pinjam 🔑</th><th>nis</th><th>nama_siswa</th><th>kelas</th><th>isbn</th><th>judul_buku</th><th>pengarang</th><th>tgl_pinjam</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>2024001</td><td>Andi Pratama</td><td>XI PPLG 1</td><td>978-602-2</td><td>Basis Data Relasional</td><td>Ahmad S</td><td>2024-01-10</td></tr>
+            <tr><td>2</td><td>2024001</td><td>Andi Pratama</td><td>XI PPLG 1</td><td>978-602-1</td><td>Web Dasar</td><td>Budi R</td><td>2024-01-10</td></tr>
+            <tr><td>3</td><td>2024002</td><td>Budi Santoso</td><td>XI PPLG 2</td><td>978-002-5</td><td>Laskar Pelangi</td><td>Andrea H</td><td>2024-01-12</td></tr>
+            <tr><td>4</td><td>2024001</td><td>Andi Pratama</td><td>XI PPLG 1</td><td>978-602-3</td><td>Algoritma</td><td>Catur W</td><td>2024-01-20</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:.8rem;color:#fcd34d">⚠️ Sudah atomik, tapi masih ada masalah: nama_siswa dan kelas bergantung pada nis (bukan PK id_pinjam). isbn menentukan judul dan pengarang. Ini <strong>Partial Dependency</strong>.</p>
+
+      <div class="arrow-row"><span class="arrow">↓</span><span>Terapkan <strong>2NF</strong>: hilangkan partial dependency — pisahkan ke tabel tersendiri</span></div>
+
+      <!-- 2NF -->
+      <div class="norm-stage-label stage-2nf">2NF — Bentuk Normal Kedua</div>
+      <p style="font-size:.83rem;color:var(--c-text-muted);margin-bottom:.75rem">Pecah menjadi 3 tabel: <strong>anggota</strong>, <strong>buku</strong>, <strong>peminjaman</strong></p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:.75rem">
+        <div>
+          <p style="font-size:.75rem;font-weight:700;color:#93c5fd;margin-bottom:.3rem">Tabel: anggota</p>
+          <div class="norm-table-wrap">
+            <table class="norm-table norm-good">
+              <thead><tr><th>nis 🔑</th><th>nama_siswa</th><th>kelas</th></tr></thead>
+              <tbody>
+                <tr><td>2024001</td><td>Andi Pratama</td><td>XI PPLG 1</td></tr>
+                <tr><td>2024002</td><td>Budi Santoso</td><td>XI PPLG 2</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:.75rem;font-weight:700;color:#93c5fd;margin-bottom:.3rem">Tabel: buku</p>
+          <div class="norm-table-wrap">
+            <table class="norm-table norm-good">
+              <thead><tr><th>isbn 🔑</th><th>judul</th><th>pengarang</th></tr></thead>
+              <tbody>
+                <tr><td>978-602-1</td><td>Web Dasar</td><td>Budi R</td></tr>
+                <tr><td>978-602-2</td><td>Basis Data</td><td>Ahmad S</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:.75rem;font-weight:700;color:#93c5fd;margin-bottom:.3rem">Tabel: peminjaman (hanya FK + data transaksi)</p>
+      <div class="norm-table-wrap">
+        <table class="norm-table norm-good">
+          <thead><tr><th>id_pinjam 🔑</th><th>nis 🔗</th><th>isbn 🔗</th><th>tgl_pinjam</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>2024001</td><td>978-602-2</td><td>2024-01-10</td></tr>
+            <tr><td>2</td><td>2024001</td><td>978-602-1</td><td>2024-01-10</td></tr>
+            <tr><td>3</td><td>2024002</td><td>978-002-5</td><td>2024-01-12</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:.8rem;color:#fcd34d">⚠️ Sudah lebih baik. Tapi bayangkan jika tabel anggota punya kolom "nama_jurusan" yang bergantung pada "kode_jurusan" — bukan langsung ke PK. Ini <strong>Transitive Dependency</strong>.</p>
+
+      <div class="arrow-row"><span class="arrow">↓</span><span>Terapkan <strong>3NF</strong>: hilangkan transitive dependency — atribut non-key tidak boleh bergantung pada atribut non-key lain</span></div>
+
+      <!-- 3NF -->
+      <div class="norm-stage-label stage-3nf">3NF — Bentuk Normal Ketiga ✓</div>
+      <p style="font-size:.83rem;color:var(--c-text-muted);margin-bottom:.5rem">Jika ada kolom seperti kode_jurusan → nama_jurusan, pisahkan ke tabel <strong>jurusan</strong>.</p>
+      <div class="code-wrap">
+        <span class="code-label">SQL — Implementasi 3NF Final</span>
+        <pre><code class="language-sql">-- Tabel jurusan (pisahkan dari anggota jika ada transitive dependency)
+CREATE TABLE jurusan (
+    kode_jurusan CHAR(5) PRIMARY KEY,   -- 'PPLG'
+    nama_jurusan VARCHAR(100) NOT NULL  -- 'Pengembangan Perangkat Lunak & Gim'
+);
+
+-- Tabel anggota — sekarang benar-benar 3NF
+CREATE TABLE anggota (
+    id_anggota   INT AUTO_INCREMENT PRIMARY KEY,
+    nis          VARCHAR(10) UNIQUE NOT NULL,
+    nama_lengkap VARCHAR(100) NOT NULL,
+    kode_jurusan CHAR(5),
+    tingkat      TINYINT,  -- 10, 11, 12
+    FOREIGN KEY (kode_jurusan) REFERENCES jurusan(kode_jurusan)
+);
+-- nama_jurusan tidak ada di sini — ambil via JOIN jika diperlukan</code></pre>
+      </div>
+      <div class="info-box tip">
+        <span class="info-box-icon">💡</span>
+        <div class="info-box-content">
+          <strong>Aturan Cepat Cek 3NF</strong>
+          <p>Tanyakan setiap kolom non-key: "Apakah kolom ini bergantung langsung ke Primary Key, atau ke kolom non-key lain?" Jika ke kolom non-key lain → ada transitive dependency → perlu dipecah.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Ringkasan — 3 Bentuk Normal</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Bentuk Normal</th><th>Syarat</th><th>Yang Dihilangkan</th></tr></thead>
+          <tbody>
+            <tr><td><strong>1NF</strong></td><td>Setiap sel atomik, ada PK, tidak ada repeating group</td><td>Multi-value attribute, kolom duplikat</td></tr>
+            <tr><td><strong>2NF</strong></td><td>Memenuhi 1NF + tidak ada partial dependency</td><td>Atribut yang hanya bergantung sebagian PK (pada composite PK)</td></tr>
+            <tr><td><strong>3NF</strong></td><td>Memenuhi 2NF + tidak ada transitive dependency</td><td>Atribut non-key yang bergantung pada atribut non-key lain</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="video-section">
+      <div class="video-section-title"><i class="fa-brands fa-youtube" style="color:#ef4444"></i> Video Pembelajaran</div>
+      <div class="video-wrapper">
+        <iframe src="https://www.youtube.com/embed/UrYLYV7WSHM"
+                title="Normalisasi Database 1NF 2NF 3NF — Bahasa Indonesia"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <section>
+      <h2><i class="fa-solid fa-link" style="color:var(--c-primary-light);font-size:.9em"></i> Sumber Belajar</h2>
+      <div class="ref-grid">
+        <div class="ref-card"><div class="ref-card-icon">🎓</div><div class="ref-card-name">Guru99 — Normalisasi</div><div class="ref-card-desc">Panduan normalisasi 1NF–BCNF dengan contoh visual yang mudah dipahami.</div><a href="https://www.guru99.com/database-normalization.html" target="_blank" rel="noopener" class="ref-card-link">Buka <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+        <div class="ref-card"><div class="ref-card-icon">📖</div><div class="ref-card-name">StudyTonight DBMS</div><div class="ref-card-desc">Materi normalisasi terstruktur dengan soal latihan dan penjelasan dependency.</div><a href="https://www.studytonight.com/dbms/database-normalization.php" target="_blank" rel="noopener" class="ref-card-link">Buka <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+      </div>
+    </section>
+
+    <div class="quiz-section">
+      <div class="quiz-header">
+        <h3><i class="fa-solid fa-circle-question"></i> Quiz Bab 5</h3>
+        <div class="quiz-progress-bar-wrap"><div class="quiz-progress-bar-fill" style="width:0%"></div></div>
+      </div>
+      <div id="quiz-container"></div>
+    </div>
+
+    <button class="btn-mark-done" id="btn-mark-done" data-bab="bab5">
+      <i class="fa-solid fa-check-circle"></i> Tandai Bab Ini Selesai
+    </button>
+
+    <nav class="bab-nav">
+      <a href="bab-4-dml.html" class="bab-nav-btn">
+        <i class="fa-solid fa-chevron-left" style="color:var(--c-text-muted)"></i>
+        <div><span class="bab-nav-label">Bab Sebelumnya</span><span class="bab-nav-title">← DML — Manipulasi Data</span></div>
+      </a>
+      <a href="bab-6-join-subquery.html" class="bab-nav-btn next">
+        <div><span class="bab-nav-label">Bab Berikutnya</span><span class="bab-nav-title">JOIN &amp; Subquery →</span></div>
+        <i class="fa-solid fa-chevron-right" style="color:var(--c-text-muted)"></i>
+      </a>
+    </nav>
+  </div>
+</div>
+<footer class="footer">E-Modul Basis Data · SMK PPLG · Kelas XI · Bab 5 dari 7</footer>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+<script src="../assets/js/progress.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script src="../assets/js/sidebar-template.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/print.js"></script>
+<script>
+const quizData = [
+  {id:1,type:'multiple_choice',question:'Sebuah tabel menyimpan nama pengarang berulang di setiap baris yang meminjam buku yang sama. Anomali apa yang terjadi jika pengarang ganti nama?',
+   options:['Anomali INSERT','Anomali UPDATE','Anomali DELETE','Bukan anomali'],
+   correct:1,explanation:'Anomali UPDATE terjadi ketika perubahan satu data harus diulang di banyak baris. Jika pengarang ganti nama, semua baris yang mencatat buku tersebut harus diupdate — rawan inkonsistensi.'},
+  {id:2,type:'multiple_choice',question:'Tabel memiliki composite PK (id_pinjam, isbn). Kolom "judul" hanya bergantung pada "isbn", bukan pada keseluruhan PK. Ini melanggar bentuk normal ke berapa?',
+   options:['1NF','2NF','3NF','BCNF'],
+   correct:1,explanation:'2NF mensyaratkan tidak ada partial dependency — setiap non-key attribute harus bergantung pada SELURUH primary key, bukan hanya sebagian. "judul" hanya bergantung pada "isbn" = partial dependency.'},
+  {id:3,type:'multiple_choice',question:'Pada tabel mahasiswa: nim → kode_prodi → nama_prodi. Artinya nama_prodi bergantung pada kode_prodi (non-key), bukan langsung ke nim (PK). Ini melanggar?',
+   options:['1NF','2NF','3NF','Tidak melanggar apa pun'],
+   correct:2,explanation:'3NF melarang transitive dependency — atribut non-key tidak boleh bergantung pada atribut non-key lain. nim → kode_prodi → nama_prodi adalah transitive dependency yang melanggar 3NF.'},
+  {id:4,type:'multiple_choice',question:'Apa syarat yang harus dipenuhi agar sebuah tabel memenuhi 1NF?',
+   options:['Tidak ada partial dependency dan ada PK','Setiap sel bernilai atomik, ada PK, tidak ada repeating group','Tidak ada transitive dependency','Ada minimal satu FOREIGN KEY'],
+   correct:1,explanation:'1NF mensyaratkan: (1) setiap sel berisi nilai tunggal/atomik, (2) ada Primary Key, dan (3) tidak ada kelompok kolom yang berulang (repeating group).'},
+  {id:5,type:'multiple_choice',question:'Kamu memiliki tabel: peminjaman(id_pinjam, id_anggota, nama_anggota, id_buku, judul_buku, tgl_pinjam). Apa langkah pertama normalisasi yang paling tepat?',
+   options:['Langsung ke 3NF dengan membuat 3 tabel terpisah','Tambahkan lebih banyak kolom untuk detail','Hapus kolom nama_anggota dan judul_buku, gantikan dengan FK ke tabel anggota dan buku','Buat composite PK dari semua kolom'],
+   correct:2,explanation:'Nama_anggota bergantung pada id_anggota (bukan PK tabel), dan judul_buku bergantung pada id_buku — keduanya adalah partial/transitive dependency. Solusi: pisahkan ke tabel anggota dan buku, gunakan FK.'}
+];
+document.addEventListener('DOMContentLoaded',()=>Quiz.init(quizData,'bab5','quiz-container'));
+</script>
+</body>
+</html>

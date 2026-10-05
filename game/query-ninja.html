@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Query Ninja — Game Edukasi SQL</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#050d1a;font-family:'Segoe UI',system-ui,sans-serif;color:#e2e8f0}
+#game-root{position:relative;width:100%;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#back-btn{position:fixed;top:12px;left:12px;z-index:50;background:rgba(255,255,255,0.07);color:#7fa8e8;padding:6px 14px;border-radius:8px;font-size:12px;text-decoration:none;border:1px solid rgba(79,142,247,0.3);transition:all .2s}
+#back-btn:hover{background:rgba(255,255,255,0.12);color:#93c5fd}
+#game-canvas{display:block;touch-action:none;cursor:crosshair}
+#hud{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:space-around;padding:8px 16px;background:rgba(5,13,26,0.92);border-top:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(8px);z-index:20;flex-wrap:wrap;gap:6px}
+.hud-item{text-align:center;min-width:56px}
+.hud-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#475569;font-weight:700}
+.hud-val{font-size:1.1rem;font-weight:800;font-family:'Courier New',monospace;color:#e2e8f0;line-height:1.2}
+#hud-score .hud-val{color:#fbbf24}
+#hud-combo .hud-val{color:#a78bfa}
+#hud-hi .hud-val{color:#4ade80}
+#hud-lives .hud-val{color:#f87171;letter-spacing:2px}
+#query-box{position:fixed;top:0;left:0;right:0;z-index:20;background:rgba(5,13,26,0.88);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,0.06);padding:10px 16px 6px}
+#query-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#475569;margin-bottom:4px}
+#query-text{font-family:'Courier New',monospace;font-size:1rem;font-weight:700;color:#e2e8f0;line-height:1.4;word-break:break-word}
+#query-text .kw{color:#93c5fd}
+#query-text .op{color:#f97316}
+#query-text .val{color:#4ade80}
+#query-timer-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:6px;overflow:hidden}
+#query-timer-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#7c3aed);border-radius:2px;transition:width .1s linear}
+#level-bar-wrap{position:fixed;top:0;right:0;z-index:25;padding:8px 12px;text-align:right;font-size:10px;color:#475569}
+#level-name{font-weight:700;color:#a78bfa;font-size:11px;margin-bottom:2px}
+#xp-bar{width:80px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-left:auto}
+#xp-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:2px;transition:width .5s ease}
+
+/* overlays */
+.overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(5,13,26,0.92);backdrop-filter:blur(12px);flex-direction:column;gap:1rem;padding:1.5rem;text-align:center}
+.overlay h1{font-size:2rem;font-weight:800;color:#fff}
+.overlay h1 span{color:#f97316}
+.overlay-subtitle{color:#64748b;font-size:.9rem;max-width:380px}
+.btn-play{padding:12px 32px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .2s;letter-spacing:.03em}
+.btn-play:hover{opacity:.85}
+.btn-secondary{padding:9px 20px;background:rgba(255,255,255,0.06);color:#94a3b8;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:.85rem;cursor:pointer;transition:all .2s}
+.btn-secondary:hover{background:rgba(255,255,255,0.1);color:#e2e8f0}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin:.5rem 0;width:100%;max-width:340px}
+.stat-box{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:.75rem .5rem;text-align:center}
+.stat-box .val{font-size:1.4rem;font-weight:800;color:#fbbf24}
+.stat-box .lbl{font-size:.68rem;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-top:.15rem}
+.combo-popup{position:fixed;left:50%;transform:translateX(-50%);font-family:'Courier New',monospace;font-weight:800;font-size:1.4rem;pointer-events:none;z-index:80;transition:all .3s;color:#a78bfa;text-shadow:0 0 20px rgba(167,139,250,.6)}
+.instructions{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:1rem 1.25rem;max-width:380px;font-size:.82rem;color:#64748b;text-align:left;line-height:1.7}
+.instructions strong{color:#94a3b8}
+</style>
+</head>
+<body>
+<a href="../index.html" id="back-btn">← E-Modul</a>
+
+<div id="query-box">
+  <div id="query-label">⚡ Query Aktif — Tebas objek yang sesuai kondisi!</div>
+  <div id="query-text">Tekan Mulai untuk bermain</div>
+  <div id="query-timer-bar"><div id="query-timer-fill" style="width:100%"></div></div>
+</div>
+
+<div id="level-bar-wrap">
+  <div id="level-name">— LEVEL —</div>
+  <div id="xp-bar"><div id="xp-fill" style="width:0%"></div></div>
+</div>
+
+<div id="game-root">
+  <canvas id="game-canvas"></canvas>
+</div>
+
+<div id="hud">
+  <div class="hud-item" id="hud-score"><div class="hud-label">Skor</div><div class="hud-val" id="val-score">0</div></div>
+  <div class="hud-item" id="hud-combo"><div class="hud-label">Combo</div><div class="hud-val" id="val-combo">x1</div></div>
+  <div class="hud-item" id="hud-lives"><div class="hud-label">Nyawa</div><div class="hud-val" id="val-lives">♥♥♥</div></div>
+  <div class="hud-item" id="hud-level"><div class="hud-label">Level</div><div class="hud-val" id="val-level">—</div></div>
+  <div class="hud-item" id="hud-hi"><div class="hud-label">Hi-Score</div><div class="hud-val" id="val-hi">0</div></div>
+</div>
+
+<!-- INTRO OVERLAY -->
+<div class="overlay" id="overlay-intro">
+  <div style="font-size:3.5rem">🥷</div>
+  <h1>Query <span>Ninja</span></h1>
+  <div class="overlay-subtitle">Game edukasi SQL — latih logika WHERE, AND, OR, NOT sambil bermain!</div>
+  <div class="instructions">
+    <strong>Cara Bermain:</strong><br>
+    • Baca query SQL di bagian atas layar<br>
+    • <strong>Klik/tap</strong> objek yang memenuhi kondisi WHERE<br>
+    • Klik salah = -1 nyawa. Habis 3 nyawa = Game Over<br>
+    • Query berganti otomatis setiap beberapa detik<br>
+    • Kumpulkan combo untuk bonus skor!
+  </div>
+  <div style="font-size:.75rem;color:#334155;margin-top:-.25rem">SMK PPLG XI · Basis Data · Kurikulum Merdeka</div>
+  <button class="btn-play" id="btn-start">▶ Mulai Bermain</button>
+  <div id="hi-display" style="font-size:.8rem;color:#475569">Hi-Score: <span id="hi-val-intro">0</span></div>
+</div>
+
+<!-- GAME OVER OVERLAY -->
+<div class="overlay" id="overlay-gameover" style="display:none">
+  <div style="font-size:3rem">💀</div>
+  <h1>Game <span>Over</span></h1>
+  <div class="stat-grid">
+    <div class="stat-box"><div class="val" id="go-score">0</div><div class="lbl">Skor</div></div>
+    <div class="stat-box"><div class="val" id="go-level">1</div><div class="lbl">Level</div></div>
+    <div class="stat-box"><div class="val" id="go-combo">1</div><div class="lbl">Max Combo</div></div>
+  </div>
+  <div id="go-new-hi" style="display:none;color:#4ade80;font-weight:700;font-size:.9rem">🎉 Hi-Score Baru!</div>
+  <div style="font-size:.8rem;color:#475569">Hi-Score: <span id="go-hi">0</span></div>
+  <div id="go-history" style="max-width:360px;width:100%;font-size:.75rem;color:#475569;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:.75rem;max-height:130px;overflow-y:auto;text-align:left;margin-top:.25rem"></div>
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center">
+    <button class="btn-play" id="btn-restart">↩ Main Lagi</button>
+    <a href="../index.html" class="btn-secondary">← Kembali ke E-Modul</a>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ═══════════════ COLOURS & SHAPES ═══════════════ */
+const COLORS = [
+  {name:'MERAH', hex:'#e05050', dark:'#8a2020', glow:'#ff6060', particle:'#ff4444'},
+  {name:'BIRU',  hex:'#4f8ef7', dark:'#1a4aaa', glow:'#80b8ff', particle:'#3399ff'},
+  {name:'HIJAU', hex:'#4ec97b', dark:'#1a7040', glow:'#70f098', particle:'#33cc66'},
+];
+const SHAPES = ['LINGKARAN','KOTAK','SEGITIGA'];
+
+/* ═══════════════ QUERY BANK (40+ queries) ═══════════════ */
+const QUERY_BANK = [
+  // Level 1 — AND only
+  {label:"Bentuk = 'KOTAK' AND Warna = 'MERAH'",     fn:o=>o.s==='KOTAK'&&o.c==='MERAH',            lvl:1},
+  {label:"Bentuk = 'LINGKARAN' AND Warna = 'BIRU'",  fn:o=>o.s==='LINGKARAN'&&o.c==='BIRU',         lvl:1},
+  {label:"Bentuk = 'SEGITIGA' AND Warna = 'HIJAU'",  fn:o=>o.s==='SEGITIGA'&&o.c==='HIJAU',         lvl:1},
+  {label:"Bentuk = 'KOTAK' AND Warna = 'BIRU'",      fn:o=>o.s==='KOTAK'&&o.c==='BIRU',             lvl:1},
+  {label:"Bentuk = 'LINGKARAN' AND Warna = 'MERAH'", fn:o=>o.s==='LINGKARAN'&&o.c==='MERAH',        lvl:1},
+  {label:"Bentuk = 'SEGITIGA' AND Warna = 'MERAH'",  fn:o=>o.s==='SEGITIGA'&&o.c==='MERAH',         lvl:1},
+  {label:"Bentuk = 'KOTAK' AND Warna = 'HIJAU'",     fn:o=>o.s==='KOTAK'&&o.c==='HIJAU',            lvl:1},
+  {label:"Bentuk = 'SEGITIGA' AND Warna = 'BIRU'",   fn:o=>o.s==='SEGITIGA'&&o.c==='BIRU',          lvl:1},
+  {label:"Bentuk = 'LINGKARAN' AND Warna = 'HIJAU'", fn:o=>o.s==='LINGKARAN'&&o.c==='HIJAU',        lvl:1},
+  // Level 2 — OR
+  {label:"Warna = 'MERAH' OR Warna = 'BIRU'",        fn:o=>o.c==='MERAH'||o.c==='BIRU',             lvl:2},
+  {label:"Bentuk = 'KOTAK' OR Bentuk = 'SEGITIGA'",  fn:o=>o.s==='KOTAK'||o.s==='SEGITIGA',         lvl:2},
+  {label:"Warna = 'HIJAU' OR Bentuk = 'LINGKARAN'",  fn:o=>o.c==='HIJAU'||o.s==='LINGKARAN',        lvl:2},
+  {label:"Warna = 'MERAH' OR Bentuk = 'SEGITIGA'",   fn:o=>o.c==='MERAH'||o.s==='SEGITIGA',         lvl:2},
+  {label:"Bentuk = 'KOTAK' OR Warna = 'HIJAU'",      fn:o=>o.s==='KOTAK'||o.c==='HIJAU',            lvl:2},
+  {label:"Warna = 'BIRU' OR Warna = 'HIJAU'",        fn:o=>o.c==='BIRU'||o.c==='HIJAU',             lvl:2},
+  {label:"Bentuk = 'LINGKARAN' OR Warna = 'MERAH'",  fn:o=>o.s==='LINGKARAN'||o.c==='MERAH',        lvl:2},
+  {label:"Bentuk = 'SEGITIGA' OR Warna = 'BIRU'",    fn:o=>o.s==='SEGITIGA'||o.c==='BIRU',          lvl:2},
+  // Level 3 — NOT
+  {label:"NOT Warna = 'HIJAU'",                       fn:o=>o.c!=='HIJAU',                            lvl:3},
+  {label:"NOT Bentuk = 'SEGITIGA'",                   fn:o=>o.s!=='SEGITIGA',                         lvl:3},
+  {label:"NOT Warna = 'MERAH'",                       fn:o=>o.c!=='MERAH',                            lvl:3},
+  {label:"NOT Bentuk = 'KOTAK'",                      fn:o=>o.s!=='KOTAK',                            lvl:3},
+  {label:"Bentuk='LINGKARAN' AND NOT Warna='MERAH'",  fn:o=>o.s==='LINGKARAN'&&o.c!=='MERAH',        lvl:3},
+  {label:"Warna = 'BIRU' AND NOT Bentuk = 'KOTAK'",  fn:o=>o.c==='BIRU'&&o.s!=='KOTAK',             lvl:3},
+  // Level 4 — AND + NOT
+  {label:"Warna='MERAH' AND NOT Bentuk='SEGITIGA'",   fn:o=>o.c==='MERAH'&&o.s!=='SEGITIGA',         lvl:4},
+  {label:"NOT Warna='BIRU' AND NOT Warna='HIJAU'",    fn:o=>o.c!=='BIRU'&&o.c!=='HIJAU',             lvl:4},
+  {label:"NOT Bentuk='LINGKARAN' AND Warna='BIRU'",   fn:o=>o.s!=='LINGKARAN'&&o.c==='BIRU',         lvl:4},
+  {label:"Bentuk='KOTAK' AND NOT Warna='MERAH'",      fn:o=>o.s==='KOTAK'&&o.c!=='MERAH',            lvl:4},
+  {label:"NOT Bentuk='SEGITIGA' AND NOT Warna='BIRU'",fn:o=>o.s!=='SEGITIGA'&&o.c!=='BIRU',          lvl:4},
+  // Level 5 — Complex
+  {label:"(Bentuk='KOTAK' OR Bentuk='LINGKARAN') AND Warna='HIJAU'", fn:o=>(o.s==='KOTAK'||o.s==='LINGKARAN')&&o.c==='HIJAU', lvl:5},
+  {label:"NOT (Bentuk='LINGKARAN' AND Warna='BIRU')", fn:o=>!(o.s==='LINGKARAN'&&o.c==='BIRU'),      lvl:5},
+  {label:"(Warna='MERAH' OR Warna='HIJAU') AND NOT Bentuk='KOTAK'", fn:o=>(o.c==='MERAH'||o.c==='HIJAU')&&o.s!=='KOTAK', lvl:5},
+  {label:"Bentuk='SEGITIGA' OR (Warna='BIRU' AND NOT Bentuk='LINGKARAN')", fn:o=>o.s==='SEGITIGA'||(o.c==='BIRU'&&o.s!=='LINGKARAN'), lvl:5},
+  {label:"NOT Warna='HIJAU' AND NOT Bentuk='LINGKARAN'", fn:o=>o.c!=='HIJAU'&&o.s!=='LINGKARAN',     lvl:5},
+];
+
+const LEVEL_THRESHOLDS = [0,80,200,380,600];
+const LEVEL_NAMES = ['BEGINNER','NOVICE','SKILLED','EXPERT','NINJA'];
+// Angka lebih kecil pada SPAWN_RATES membuat spawn lebih cepat
+const SPAWN_RATES  = [800,600,450,300,200]; 
+const QUERY_TIMES  = [12,11,10,9,8];
+// Angka lebih besar pada MAX_OBJECTS memperbanyak jumlah objek di layar
+const MAX_OBJECTS  = [8,10,12,15,20];
+
+/* ═══════════════ STATE ═══════════════ */
+let canvas, ctx, W, H, raf;
+let running=false, paused=false;
+let score=0, lives=3, combo=0, maxCombo=0;
+let levelIdx=0, xp=0;
+let objects=[], particles=[], slashes=[], missEffects=[], hitHistory=[];
+let currentQuery=null, queryTimer=0, queryDuration=12;
+let spawnTimer=0, spawnInterval=1400;
+let lastTime=0;
+let highScore = parseInt(localStorage.getItem('queryninja_highscore')||'0');
+
+/* ═══════════════ INIT ═══════════════ */
+function init(){
+  canvas=document.getElementById('game-canvas');
+  ctx=canvas.getContext('2d');
+  resize();
+  window.addEventListener('resize',resize);
+  canvas.addEventListener('click',onClick);
+  canvas.addEventListener('touchstart',onTouch,{passive:false});
+  document.getElementById('val-hi').textContent=highScore;
+  document.getElementById('hi-val-intro').textContent=highScore;
+  document.getElementById('btn-start').addEventListener('click',startGame);
+  document.getElementById('btn-restart').addEventListener('click',startGame);
+}
+
+function resize(){
+  const hud=document.getElementById('hud');
+  const qbox=document.getElementById('query-box');
+  W=canvas.width=window.innerWidth;
+  H=canvas.height=window.innerHeight-(hud?hud.offsetHeight:60)-(qbox?qbox.offsetHeight:70);
+  canvas.style.marginTop=(qbox?qbox.offsetHeight:70)+'px';
+}
+
+function startGame(){
+  document.getElementById('overlay-intro').style.display='none';
+  document.getElementById('overlay-gameover').style.display='none';
+  score=0;lives=3;combo=0;maxCombo=0;levelIdx=0;xp=0;
+  objects=[];particles=[];slashes=[];missEffects=[];hitHistory=[];
+  spawnInterval=SPAWN_RATES[0];
+  queryDuration=QUERY_TIMES[0];
+  spawnTimer=0;queryTimer=0;
+  pickNewQuery();
+  updateHUD();
+  if(raf)cancelAnimationFrame(raf);
+  running=true;
+  lastTime=performance.now();
+  raf=requestAnimationFrame(loop);
+}
+
+/* ═══════════════ MAIN LOOP ═══════════════ */
+function loop(ts){
+  if(!running){return;}
+  const dt=Math.min((ts-lastTime)/1000,0.05);
+  lastTime=ts;
+  update(dt);
+  draw();
+  raf=requestAnimationFrame(loop);
+}
+
+function update(dt){
+  // spawn
+  spawnTimer+=dt;
+  if(spawnTimer>=spawnInterval/1000 && objects.length<MAX_OBJECTS[levelIdx]){
+    spawnTimer=0;
+    spawnObject();
+  }
+  // query timer
+  queryTimer+=dt;
+  const prog=1-(queryTimer/queryDuration);
+  document.getElementById('query-timer-fill').style.width=Math.max(0,prog*100)+'%';
+  if(queryTimer>=queryDuration){pickNewQuery();queryTimer=0;}
+  // objects
+  for(let i=objects.length-1;i>=0;i--){
+    const o=objects[i];
+    o.vy+=580*dt; // gravity
+    o.x+=o.vx*dt;
+    o.y+=o.vy*dt;
+    o.rot+=o.rotV*dt;
+    o.life-=dt;
+    if(o.y>H+80||o.life<=0){objects.splice(i,1);}
+  }
+  // particles
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=200*dt; p.life-=dt;
+    if(p.life<=0)particles.splice(i,1);
+  }
+  // slashes
+  for(let i=slashes.length-1;i>=0;i--){
+    slashes[i].life-=dt;
+    if(slashes[i].life<=0)slashes.splice(i,1);
+  }
+  // miss effects
+  for(let i=missEffects.length-1;i>=0;i--){
+    missEffects[i].life-=dt;
+    if(missEffects[i].life<=0)missEffects.splice(i,1);
+  }
+  // level up
+  checkLevel();
+}
+
+function spawnObject(){
+  const ci=Math.floor(Math.random()*3);
+  const si=Math.floor(Math.random()*3);
+  const x=60+Math.random()*(W-120);
+  
+  // Naikkan base speed (350 -> 550) dan rentang random (180 -> 250) agar lemparan lebih tinggi
+  const speed=550+Math.random()*250+levelIdx*50; 
+  
+  objects.push({
+    x, y:H+30, 
+    // Naikkan nilai pengali vx (120 -> 180) agar gerakan menyamping juga sedikit lebih cepat
+    vx:(Math.random()-.5)*180, 
+    vy:-(speed), rot:Math.random()*Math.PI*2, rotV:(Math.random()-.5)*4,
+    c:COLORS[ci].name, ci, s:SHAPES[si], si,
+    r:26+Math.random()*6, life:3.5
+  });
+}
+
+function pickNewQuery(){
+  const pool=QUERY_BANK.filter(q=>q.lvl<=levelIdx+1);
+  currentQuery=pool[Math.floor(Math.random()*pool.length)];
+  renderQuery();
+}
+
+function renderQuery(){
+  if(!currentQuery)return;
+  const raw=currentQuery.label;
+  let html=raw
+    .replace(/\b(SELECT|WHERE|AND|OR|NOT|FROM)\b/g,'<span class="kw">$1</span>')
+    .replace(/\b(Bentuk|Warna)\b/g,'<span class="op">$1</span>')
+    .replace(/'([^']+)'/g,"'<span class=\"val\">$1</span>'");
+  document.getElementById('query-text').innerHTML='SELECT * WHERE '+html;
+}
+
+/* ═══════════════ DRAW ═══════════════ */
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  drawBg();
+  slashes.forEach(drawSlash);
+  objects.forEach(drawObj);
+  particles.forEach(drawParticle);
+  missEffects.forEach(drawMissEffect);
+}
+
+function drawBg(){
+  ctx.fillStyle='#050d1a';
+  ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,0.025)';
+  ctx.lineWidth=1;
+  const gs=55;
+  for(let x=0;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+}
+
+function drawObj(o){
+  const col=COLORS[o.ci];
+  ctx.save();
+  ctx.translate(o.x,o.y);
+  ctx.rotate(o.rot);
+  ctx.shadowColor=col.glow; ctx.shadowBlur=18;
+  const grad=ctx.createRadialGradient(0,0,2,0,0,o.r);
+  grad.addColorStop(0,col.hex); grad.addColorStop(1,col.dark);
+  ctx.fillStyle=grad;
+  ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  if(o.s==='LINGKARAN'){
+    ctx.arc(0,0,o.r,0,Math.PI*2);
+  } else if(o.s==='KOTAK'){
+    ctx.rect(-o.r,-o.r,o.r*2,o.r*2);
+  } else {
+    const h=o.r*1.15;
+    ctx.moveTo(0,-h); ctx.lineTo(h,h*.8); ctx.lineTo(-h,h*.8); ctx.closePath();
+  }
+  ctx.fill(); ctx.stroke();
+  ctx.shadowBlur=0;
+  // label
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  ctx.font=`bold ${Math.round(o.r*.38)}px 'Courier New',monospace`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const abbrev=(s=>s==='LINGKARAN'?'LNG':s==='KOTAK'?'KOT':'SGT')(o.s);
+  const wabbrev=(c=>c==='MERAH'?'MRH':c==='BIRU'?'BRU':'HJU')(o.c);
+  ctx.fillText(abbrev,0,-o.r*.22);
+  ctx.fillText(wabbrev,0,o.r*.3);
+  ctx.restore();
+}
+
+function drawParticle(p){
+  ctx.save();
+  ctx.globalAlpha=Math.max(0,p.life/p.maxLife);
+  ctx.fillStyle=p.col;
+  ctx.shadowColor=p.col; ctx.shadowBlur=6;
+  ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawSlash(s){
+  ctx.save();
+  ctx.globalAlpha=Math.max(0,s.life/s.maxLife)*.8;
+  ctx.strokeStyle=s.col; ctx.lineWidth=2.5; ctx.lineCap='round';
+  ctx.shadowColor=s.col; ctx.shadowBlur=10;
+  ctx.beginPath(); ctx.moveTo(s.x1,s.y1); ctx.lineTo(s.x2,s.y2); ctx.stroke();
+  ctx.restore();
+}
+
+function drawMissEffect(m){
+  ctx.save();
+  ctx.globalAlpha=Math.max(0,m.life/m.maxLife)*.7;
+  ctx.strokeStyle='#ef4444'; ctx.lineWidth=2; ctx.lineCap='round';
+  const sz=m.r*1.2;
+  ctx.beginPath(); ctx.moveTo(m.x-sz,m.y-sz); ctx.lineTo(m.x+sz,m.y+sz); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(m.x+sz,m.y-sz); ctx.lineTo(m.x-sz,m.y+sz); ctx.stroke();
+  ctx.restore();
+}
+
+/* ═══════════════ INTERACTION ═══════════════ */
+function getCanvasPos(e){
+  const r=canvas.getBoundingClientRect();
+  return{x:e.clientX-r.left, y:e.clientY-r.top};
+}
+function onClick(e){handleHit(getCanvasPos(e));}
+function onTouch(e){e.preventDefault();handleHit(getCanvasPos(e.touches[0]));}
+
+function handleHit(pos){
+  if(!running)return;
+  let hit=false;
+  for(let i=objects.length-1;i>=0;i--){
+    const o=objects[i];
+    const dx=pos.x-o.x, dy=pos.y-o.y;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<=o.r+6){
+      hit=true;
+      const correct=currentQuery&&currentQuery.fn(o);
+      if(correct){
+        scoreHit(o, pos);
+        hitHistory.push(`✅ Tebas ${o.s} ${o.c}`);
+      } else {
+        scoreMiss(pos, o.r);
+        hitHistory.push(`❌ Salah: ${o.s} ${o.c}`);
+      }
+      objects.splice(i,1);
+      break;
+    }
+  }
+  // add slash trail
+  const ang=Math.random()*Math.PI*2;
+  const len=40+Math.random()*30;
+  slashes.push({
+    x1:pos.x-Math.cos(ang)*len*.5, y1:pos.y-Math.sin(ang)*len*.5,
+    x2:pos.x+Math.cos(ang)*len*.5, y2:pos.y+Math.sin(ang)*len*.5,
+    col:hit?'#a78bfa':'rgba(255,255,255,0.3)',
+    life:.4, maxLife:.4
+  });
+}
+
+function scoreHit(o, pos){
+  combo++;
+  maxCombo=Math.max(maxCombo,combo);
+  const mult=combo>=7?3:combo>=5?2:combo>=3?1.5:1;
+  const pts=Math.round(10*mult);
+  score+=pts; xp+=pts;
+  // particles burst
+  const col=COLORS[o.ci];
+  for(let i=0;i<12;i++){
+    const ang=Math.random()*Math.PI*2;
+    const spd=80+Math.random()*180;
+    particles.push({x:o.x,y:o.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd-60,
+      r:2+Math.random()*3, col:col.particle, life:.8, maxLife:.8});
+  }
+  if(combo>=3) showComboPopup(mult, pos);
+  updateHUD();
+  checkLevel();
+}
+
+function scoreMiss(pos, r){
+  combo=0;
+  lives--;
+  missEffects.push({x:pos.x,y:pos.y,r:r||25,life:.5,maxLife:.5});
+  if(lives<=0) gameOver();
+  updateHUD();
+}
+
+function showComboPopup(mult, pos){
+  const el=document.querySelector('.combo-popup')||createComboEl();
+  el.textContent=`COMBO x${mult}!`;
+  el.style.top=(pos.y-60)+'px'; el.style.opacity=1; el.style.fontSize='1.5rem';
+  el.style.color=mult>=3?'#fbbf24':mult>=2?'#f97316':'#a78bfa';
+  setTimeout(()=>{el.style.opacity=0;},900);
+}
+function createComboEl(){
+  const el=document.createElement('div');
+  el.className='combo-popup'; el.style.opacity=0;
+  document.body.appendChild(el); return el;
+}
+
+function checkLevel(){
+  const nextThresh=LEVEL_THRESHOLDS[levelIdx+1];
+  if(nextThresh!==undefined && score>=nextThresh){
+    levelIdx=Math.min(levelIdx+1,4);
+    spawnInterval=SPAWN_RATES[levelIdx];
+    queryDuration=QUERY_TIMES[levelIdx];
+    xp=0;
+  }
+  // xp bar
+  const cur=LEVEL_THRESHOLDS[levelIdx];
+  const nxt=LEVEL_THRESHOLDS[levelIdx+1];
+  const pct=nxt?((score-cur)/(nxt-cur)*100):100;
+  document.getElementById('xp-fill').style.width=Math.min(100,pct)+'%';
+  document.getElementById('level-name').textContent=LEVEL_NAMES[levelIdx];
+}
+
+function updateHUD(){
+  document.getElementById('val-score').textContent=score;
+  const mult=combo>=7?3:combo>=5?2:combo>=3?1.5:1;
+  document.getElementById('val-combo').textContent=combo>=3?`x${mult}`:'x1';
+  document.getElementById('val-lives').textContent='♥'.repeat(Math.max(0,lives))+'♡'.repeat(Math.max(0,3-lives));
+  document.getElementById('val-level').textContent=LEVEL_NAMES[levelIdx];
+  document.getElementById('val-hi').textContent=highScore;
+}
+
+function gameOver(){
+  running=false;
+  cancelAnimationFrame(raf);
+  // save hi score
+  const isNew=score>highScore;
+  if(isNew){highScore=score;localStorage.setItem('queryninja_highscore',highScore);}
+  // show overlay
+  document.getElementById('go-score').textContent=score;
+  document.getElementById('go-level').textContent=LEVEL_NAMES[levelIdx];
+  document.getElementById('go-combo').textContent='x'+(maxCombo>=7?3:maxCombo>=5?2:maxCombo>=3?1.5:1);
+  document.getElementById('go-hi').textContent=highScore;
+  document.getElementById('go-new-hi').style.display=isNew?'block':'none';
+  // hit history
+  const hist=document.getElementById('go-history');
+  if(hitHistory.length){
+    hist.innerHTML='<strong style="color:#94a3b8;font-size:.75rem">Riwayat 10 tebasan terakhir:</strong><br>'+
+      hitHistory.slice(-10).reverse().map(h=>`<span>${h}</span>`).join('<br>');
+  } else {hist.innerHTML='<span>Belum ada tebasan.</span>';}
+  document.getElementById('overlay-gameover').style.display='flex';
+  document.getElementById('val-hi').textContent=highScore;
+}
+
+document.addEventListener('DOMContentLoaded',init);
+})();
+</script>
+</body>
+</html>
